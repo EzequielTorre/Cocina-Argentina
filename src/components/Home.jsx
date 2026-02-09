@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { useRecipes } from "../context/RecipeContext";
 import RecipeCard from "./RecipeCard";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import ErrorAlert from "./ui/ErrorAlert";
 
 const Home = () => {
-  const { getRecipes } = useRecipes();
-  const recipes = getRecipes().slice(0, 6); // Mostrar primeras 6 recetas
+  const { recipes, loading, error } = useRecipes();
+  const featuredRecipes = recipes.slice(0, 6); // Mostrar primeras 6 recetas
 
   return (
     <div className="pb-5">
@@ -84,24 +86,37 @@ const Home = () => {
           <h2 className="text-center display-6 fw-bold text-dark mb-5">
             Recetas Destacadas
           </h2>
-          <Row className="g-4">
-            {recipes.map((recipe) => (
-              <Col lg={4} md={6} xs={12} key={recipe.id}>
-                <RecipeCard recipe={recipe} />
-              </Col>
-            ))}
-          </Row>
-          <div className="text-center mt-5">
-            <Button
-              as={Link}
-              to="/recetas"
-              variant="outline-primary"
-              size="lg"
-              className="rounded-pill px-4 py-2"
-            >
-              Ver Todas las Recetas
-            </Button>
-          </div>
+
+          {loading ? (
+            <LoadingSpinner message="Cargando recetas..." />
+          ) : error ? (
+            <ErrorAlert message={error} variant="warning" />
+          ) : featuredRecipes.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              <p className="lead">No hay recetas disponibles en este momento</p>
+            </div>
+          ) : (
+            <>
+              <Row className="g-4">
+                {featuredRecipes.map((recipe) => (
+                  <Col lg={4} md={6} xs={12} key={recipe.id}>
+                    <RecipeCard recipe={recipe} />
+                  </Col>
+                ))}
+              </Row>
+              <div className="text-center mt-5">
+                <Button
+                  as={Link}
+                  to="/recetas"
+                  variant="outline-primary"
+                  size="lg"
+                  className="rounded-pill px-4 py-2"
+                >
+                  Ver Todas las Recetas
+                </Button>
+              </div>
+            </>
+          )}
         </Container>
       </section>
     </div>

@@ -1,32 +1,77 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import recipesData from "../components/data/recipes.json";
+import {
+  getRecipes,
+  getRecipeById as getRecipeByIdAPI,
+} from "../services/supabaseClient";
 
 // Crear el contexto
 const RecipeContext = createContext();
 
 /**
  * RecipeProvider - Proveedor que envuelve la aplicación
- * Proporciona acceso a todas las funciones relacionadas con recetas
+ * Obtiene recetas de Supabase, con fallback a datos locales
  */
 export function RecipeProvider({ children }) {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Cargar recetas de Supabase al montar el componente
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Intentar obtener recetas de Supabase
+        const data = await getRecipes();
+        setRecipes(data);
+      } catch (err) {
+        console.warn(
+          "⚠️ Error al conectar con Supabase, usando datos locales:",
+          err,
+        );
+        // Fallback: usar datos locales si Supabase falla
+        setRecipes(recipesData);
+        setError("Usando datos locales (Supabase no disponible)");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecipes();
+  }, []);
+
   /**
    * Obtiene todas las recetas
    * @returns {Array} Array con todas las recetas
    */
-  const getRecipes = () => recipesData;
+  const getAllRecipes = () => recipes;
 
   /**
    * Obtiene una receta específica por ID
    * @param {string|number} id - ID de la receta
-   * @returns {Object|null} La receta encontrada o null
+   * @returns {Promise<Object>} La receta encontrada
    */
-  const getRecipeById = (id) => {
-    const numId = parseInt(id);
-    if (isNaN(numId)) {
-      console.warn(`ID inválido: ${id}`);
-      return null;
+  const getRecipeById = async (id) => {
+    try {
+      // Primero intentar desde Supabase
+      const data = await getRecipeByIdAPI(id);
+      return data;
+    } catch (err) {
+      console.warn(
+        "⚠️ Error al obtener receta de Supabase, buscando localmente:",
+        err,
+      );
+      // Fallback: buscar en datos locales
+      const numId = parseInt(id);
+      if (isNaN(numId)) {
+        console.warn(`ID inválido: ${id}`);
+        return null;
+      }
+      return recipesData.find((r) => r.id === numId) || null;
     }
-    return recipesData.find((r) => r.id === numId);
   };
 
   /**
@@ -34,18 +79,27 @@ export function RecipeProvider({ children }) {
    * @returns {Array} Array con categorías (incluye 'Todas' al inicio)
    */
   const getCategories = () => {
-    const categories = new Set(recipesData.map((r) => r.category));
+    if (recipes.length === 0) {
+      // Fallback a datos locales si no hay recetas cargadas
+      const categories = new Set(recipesData.map((r) => r.category));
+      return ["Todas", ...Array.from(categories)];
+    }
+
+    const categories = new Set(recipes.map((r) => r.category));
     return ["Todas", ...Array.from(categories)];
   };
 
   /**
-   * Busca recetas por término y categoría
+   * Busca recetas por término y categoría (en datos locales)
+   * Para búsquedas más eficientes, usar useSearchRecipes hook
    * @param {string} searchTerm - Término a buscar
    * @param {string} category - Categoría a filtrar
    * @returns {Array} Array de recetas que coinciden con los criterios
    */
   const searchRecipes = (searchTerm = "", category = "Todas") => {
-    return recipesData.filter((recipe) => {
+    const data = recipes.length > 0 ? recipes : recipesData;
+
+    return data.filter((recipe) => {
       const matchesSearch = recipe.title
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -57,7 +111,10 @@ export function RecipeProvider({ children }) {
 
   // Proporcionar todas las funciones a través del contexto
   const value = {
-    getRecipes,
+    recipes,
+    loading,
+    error,
+    getAllRecipes,
     getRecipeById,
     getCategories,
     searchRecipes,

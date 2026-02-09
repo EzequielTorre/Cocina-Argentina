@@ -1,9 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { FaArrowLeft, FaPrint, FaShareAlt } from "react-icons/fa";
-import { useRecipes } from "../context/RecipeContext";
 import { useRatings } from "../context/RatingsContext";
+import { useRecipeDetail } from "../hooks/useRecipesAPI";
 import StarRating from "./StarRating";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import ErrorAlert from "./ui/ErrorAlert";
 import {
   Container,
   Row,
@@ -16,24 +18,26 @@ import {
 
 const RecipeDetail = () => {
   const { id } = useParams();
-  const { getRecipeById } = useRecipes();
+  const { recipe, loading, error } = useRecipeDetail(id);
   const { getRating, setRating } = useRatings();
 
-  // Validar que el ID sea un número válido
-  const numId = parseInt(id);
-  const recipe = !isNaN(numId) ? getRecipeById(id) : null;
   const rating = recipe ? getRating(recipe.id) : 0;
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  if (!recipe) {
+  if (loading) {
+    return <LoadingSpinner message="Cargando receta..." />;
+  }
+
+  if (error || !recipe) {
     return (
       <Container className="text-center py-5">
-        <h2 className="text-muted display-6">Receta no encontrada...</h2>
+        {error && <ErrorAlert message={error} variant="danger" />}
+        <h2 className="text-muted display-6 mt-4">Receta no encontrada...</h2>
         <p className="text-secondary mb-4">
-          La receta que buscas no existe o el ID es inválido.
+          La receta que buscas no existe o hubo un error al cargarla.
         </p>
         <Link to="/recetas" className="btn btn-primary">
           Volver al recetario

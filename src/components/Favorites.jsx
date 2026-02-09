@@ -3,14 +3,15 @@ import { Link } from "react-router-dom";
 import { useFavorites } from "../context/FavoritesContext";
 import { useRecipes } from "../context/RecipeContext";
 import RecipeCard from "./RecipeCard";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import ErrorAlert from "./ui/ErrorAlert";
 
 const Favorites = () => {
   const { getFavorites } = useFavorites();
-  const { getRecipes } = useRecipes();
+  const { recipes, loading, error } = useRecipes();
 
   const favoriteIds = getFavorites();
-  const allRecipes = getRecipes();
-  const favoriteRecipes = allRecipes.filter((recipe) =>
+  const favoriteRecipes = recipes.filter((recipe) =>
     favoriteIds.includes(recipe.id),
   );
 
@@ -19,13 +20,19 @@ const Favorites = () => {
       <div className="text-center mb-5">
         <h1 className="display-4 fw-bold mb-3">Mis Favoritos ❤️</h1>
         <p className="lead text-secondary">
-          {favoriteRecipes.length === 0
-            ? "Aún no tienes recetas favoritas. ¡Empieza a agregar algunas!"
-            : `Tienes ${favoriteRecipes.length} receta${favoriteRecipes.length !== 1 ? "s" : ""} favorita${favoriteRecipes.length !== 1 ? "s" : ""}`}
+          {loading
+            ? "Cargando favoritos..."
+            : favoriteRecipes.length === 0
+              ? "Aún no tienes recetas favoritas. ¡Empieza a agregar algunas!"
+              : `Tienes ${favoriteRecipes.length} receta${favoriteRecipes.length !== 1 ? "s" : ""} favorita${favoriteRecipes.length !== 1 ? "s" : ""}`}
         </p>
       </div>
 
-      {favoriteRecipes.length === 0 ? (
+      {loading ? (
+        <LoadingSpinner message="Cargando tus favoritos..." />
+      ) : error ? (
+        <ErrorAlert message={error} variant="warning" />
+      ) : favoriteRecipes.length === 0 ? (
         <div className="text-center py-5">
           <p className="text-muted mb-4">
             Navega a través de nuestras recetas y haz clic en el corazón para
