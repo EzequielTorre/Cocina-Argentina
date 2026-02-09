@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Tabla de cortar -->
+  <rect x="10" y="15" width="80" height="60" rx="8" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+  <!-- Orificio/asa -->
+  <circle cx="80" cy="25" r="8" fill="white" stroke="#654321" stroke-width="1.5"/>
+  <!-- Detalles de la madera -->
+  <line x1="20" y1="30" x2="70" y2="30" stroke="#654321" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="45" x2="70" y2="45" stroke="#654321" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="60" x2="70" y2="60" stroke="#654321" stroke-width="1" opacity="0.5"/>
+</svg>
