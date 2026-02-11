@@ -1,5 +1,6 @@
 import { useState } from "react";
 import RecipeCard from "./RecipeCard";
+import RecipeCardSkeleton from "./ui/RecipeCardSkeleton";
 import { useRecipes } from "../context/RecipeContext";
 import { Container, Row, Col, Form, InputGroup } from "react-bootstrap";
 import { FaSearch } from "react-icons/fa";
@@ -32,7 +33,13 @@ const RecipeList = () => {
       </div>
 
       {loading ? (
-        <LoadingSpinner message="Cargando recetas..." />
+        <Row xs={1} md={2} lg={3} className="g-4">
+          {[...Array(6)].map((_, idx) => (
+            <Col key={idx}>
+              <RecipeCardSkeleton />
+            </Col>
+          ))}
+        </Row>
       ) : error ? (
         <ErrorAlert message={error} variant="warning" />
       ) : (

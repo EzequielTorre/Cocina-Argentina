@@ -17,9 +17,8 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
-      afterSignInUrl="/"
-      afterSignUpUrl="/"
-      afterSignOutUrl="/"
+      fallbackRedirectUrl="/"
+      signUpFallbackRedirectUrl="/"
     >
       {/* Providers envuelven a App */}
       <RecipeProvider>

@@ -59,9 +59,13 @@ const RecipeCard = ({ recipe }) => {
       <Card.Body className="d-flex flex-column">
         <Card.Title className="fw-bold">{recipe.title}</Card.Title>
         <Card.Text className="text-secondary small flex-grow-1">
-          {recipe.description.length > 100
-            ? recipe.description.substring(0, 100) + "..."
-            : recipe.description}
+          {(recipe.descriptions || recipe.description) &&
+          (recipe.descriptions || recipe.description).length > 100
+            ? (recipe.descriptions || recipe.description).substring(0, 100) +
+              "..."
+            : recipe.descriptions ||
+              recipe.description ||
+              "Sin descripción disponible."}
         </Card.Text>
 
         {/* Rating */}

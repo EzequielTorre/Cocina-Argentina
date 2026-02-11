@@ -1,8 +1,15 @@
 import { useParams, Link } from "react-router-dom";
-import { useEffect } from "react";
-import { FaArrowLeft, FaPrint, FaShareAlt } from "react-icons/fa";
+import { useEffect, useState, useCallback } from "react";
+import {
+  FaArrowLeft,
+  FaPrint,
+  FaShareAlt,
+  FaUtensils,
+  FaCoffee,
+  FaExchangeAlt,
+} from "react-icons/fa";
 import { useRatings } from "../context/RatingsContext";
-import { useRecipeDetail } from "../hooks/useRecipesAPI";
+import { useRecipes } from "../context/RecipeContext";
 import StarRating from "./StarRating";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import ErrorAlert from "./ui/ErrorAlert";
@@ -18,8 +25,68 @@ import {
 
 const RecipeDetail = () => {
   const { id } = useParams();
-  const { recipe, loading, error } = useRecipeDetail(id);
+  const { getRecipeById } = useRecipes();
+  const [recipe, setRecipe] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { getRating, setRating } = useRatings();
+  const [cookingMode, setCookingMode] = useState(false);
+  const [unitSystem, setUnitSystem] = useState("metric"); // 'metric' o 'imperial'
+
+  const toggleCookingMode = async () => {
+    if (!cookingMode) {
+      try {
+        if ("wakeLock" in navigator) {
+          await navigator.wakeLock.request("screen");
+        }
+      } catch (err) {
+        console.error("Wake Lock error:", err);
+      }
+    }
+    setCookingMode(!cookingMode);
+  };
+
+  const convertUnits = (ingredient) => {
+    if (unitSystem === "metric") return ingredient;
+
+    // Regex simple para detectar gramos o ml y convertir (ejemplo básico)
+    return ingredient.replace(
+      /(\d+)\s*(g|gr|gramos|ml|mililitros)/gi,
+      (match, p1, p2) => {
+        const value = parseInt(p1);
+        if (p2.toLowerCase().includes("g")) {
+          const oz = (value * 0.035274).toFixed(1);
+          return `${oz} oz (${value}g)`;
+        } else {
+          const flOz = (value * 0.033814).toFixed(1);
+          return `${flOz} fl oz (${value}ml)`;
+        }
+      },
+    );
+  };
+
+  const isSweetCategory =
+    recipe?.category === "Postre" ||
+    recipe?.title?.toLowerCase().includes("alfajor") ||
+    recipe?.title?.toLowerCase().includes("dulce");
+
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      try {
+        setLoading(true);
+        const data = await getRecipeById(id);
+        setRecipe(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchRecipe();
+    }
+  }, [id, getRecipeById]);
 
   const rating = recipe ? getRating(recipe.id) : 0;
 
@@ -80,7 +147,9 @@ const RecipeDetail = () => {
               {recipe.category}
             </Badge>
             <h1 className="display-4 fw-bold mb-3">{recipe.title}</h1>
-            <p className="lead text-secondary mb-4">{recipe.description}</p>
+            <p className="lead text-secondary mb-4">
+              {recipe.descriptions || recipe.description}
+            </p>
 
             {/* Rating Section */}
             <div className="bg-body-tertiary p-3 rounded-3 mb-4">
@@ -95,7 +164,16 @@ const RecipeDetail = () => {
               />
             </div>
 
-            <div className="d-flex gap-3 pt-3 border-top">
+            <div className="d-flex flex-wrap gap-2 pt-3 border-top">
+              <Button
+                variant={cookingMode ? "warning" : "outline-warning"}
+                className="d-flex align-items-center gap-2 shadow-sm"
+                onClick={toggleCookingMode}
+                title="Mantener pantalla encendida y letra grande"
+              >
+                <FaUtensils />{" "}
+                {cookingMode ? "Salir Modo Cocina" : "Modo Cocina"}
+              </Button>
               <Button
                 variant="outline-secondary"
                 className="d-flex align-items-center gap-2 shadow-sm"
@@ -112,7 +190,7 @@ const RecipeDetail = () => {
                     navigator
                       .share({
                         title: recipe.title,
-                        text: recipe.description,
+                        text: recipe.description || recipe.descriptions,
                         url: window.location.href,
                       })
                       .catch(() => {});
@@ -134,23 +212,50 @@ const RecipeDetail = () => {
         <Row>
           {/* Ingredientes */}
           <Col md={4} className="mb-5 mb-md-0">
-            <h3 className="h2 fw-bold border-bottom border-warning border-3 d-inline-block pb-2 mb-4">
-              Ingredientes
-            </h3>
+            <div className="d-flex justify-content-between align-items-center border-bottom border-warning border-3 mb-4">
+              <h3 className="h2 fw-bold d-inline-block pb-2 mb-0">
+                Ingredientes
+              </h3>
+              <Button
+                variant="link"
+                size="sm"
+                className="text-decoration-none text-muted"
+                onClick={() =>
+                  setUnitSystem(unitSystem === "metric" ? "imperial" : "metric")
+                }
+              >
+                <FaExchangeAlt />{" "}
+                {unitSystem === "metric" ? "Ver en oz" : "Ver en g/ml"}
+              </Button>
+            </div>
             <ListGroup variant="flush">
-              {recipe.ingredients.map((ingredient, index) => (
-                <ListGroup.Item
-                  key={index}
-                  className="bg-transparent border-0 ps-0 d-flex align-items-center text-secondary"
-                >
-                  <span
-                    className="bg-info rounded-circle me-3"
-                    style={{ width: "8px", height: "8px" }}
-                  ></span>
-                  {ingredient}
-                </ListGroup.Item>
-              ))}
+              {(recipe.ingredients || recipe.ingredientes || []).map(
+                (ingredient, index) => (
+                  <ListGroup.Item
+                    key={index}
+                    className="bg-transparent border-0 ps-0 d-flex align-items-center text-secondary"
+                  >
+                    <span
+                      className="bg-info rounded-circle me-3"
+                      style={{ width: "8px", height: "8px" }}
+                    ></span>
+                    {convertUnits(ingredient)}
+                  </ListGroup.Item>
+                ),
+              )}
             </ListGroup>
+
+            {isSweetCategory && (
+              <div className="mt-4 p-3 bg-warning bg-opacity-10 rounded-3 border border-warning border-opacity-25 d-flex align-items-center gap-3">
+                <FaCoffee className="text-warning fs-3" />
+                <div>
+                  <h6 className="mb-1 fw-bold">Maridaje con Mate</h6>
+                  <p className="small mb-0 text-secondary">
+                    Ideal para acompañar con unos amargos.
+                  </p>
+                </div>
+              </div>
+            )}
           </Col>
 
           {/* Instrucciones */}
@@ -160,10 +265,23 @@ const RecipeDetail = () => {
                 Instrucciones
               </h3>
               <div
-                className="text-secondary lead"
+                className={`text-secondary ${cookingMode ? "display-6 fw-normal lh-base" : "lead"}`}
                 style={{ whiteSpace: "pre-line" }}
               >
-                {recipe.instructions}
+                {Array.isArray(
+                  recipe.instruccions ||
+                    recipe.instructions ||
+                    recipe.instrucciones,
+                )
+                  ? (
+                      recipe.instruccions ||
+                      recipe.instructions ||
+                      recipe.instrucciones
+                    ).join("\n")
+                  : recipe.instruccions ||
+                    recipe.instructions ||
+                    recipe.instrucciones ||
+                    "No hay instrucciones disponibles para esta receta."}
               </div>
             </div>
           </Col>

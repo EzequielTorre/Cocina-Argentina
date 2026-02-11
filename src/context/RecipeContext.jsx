@@ -58,6 +58,15 @@ export function RecipeProvider({ children }) {
     try {
       // Primero intentar desde Supabase
       const data = await getRecipeByIdAPI(id);
+
+      // Si no hay datos o faltan instrucciones, intentar fallback local
+      if (!data || !data.instructions) {
+        console.warn("⚠️ Receta incompleta en Supabase, buscando localmente");
+        const numId = parseInt(id);
+        const localRecipe = recipesData.find((r) => r.id === numId);
+        if (localRecipe) return { ...localRecipe, ...data }; // Combinar si hay algo
+      }
+
       return data;
     } catch (err) {
       console.warn(
@@ -97,14 +106,19 @@ export function RecipeProvider({ children }) {
    * @returns {Array} Array de recetas que coinciden con los criterios
    */
   const searchRecipes = (searchTerm = "", category = "Todas") => {
-    const data = recipes.length > 0 ? recipes : recipesData;
+    const data = recipes && recipes.length > 0 ? recipes : recipesData;
 
     return data.filter((recipe) => {
-      const matchesSearch = recipe.title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      const title = recipe.title || "";
+      const description = recipe.descriptions || recipe.description || "";
+
+      const matchesSearch =
+        title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        description.toLowerCase().includes(searchTerm.toLowerCase());
+
       const matchesCategory =
         category === "Todas" || recipe.category === category;
+
       return matchesSearch && matchesCategory;
     });
   };

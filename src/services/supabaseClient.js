@@ -21,6 +21,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
  */
 export const getRecipes = async () => {
   try {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Configuración de Supabase incompleta");
+    }
     const { data, error } = await supabase
       .from("recipes")
       .select("*")
@@ -30,7 +33,7 @@ export const getRecipes = async () => {
     return data || [];
   } catch (error) {
     console.error("Error al obtener recetas:", error);
-    throw error;
+    return []; // Devolver array vacío en lugar de lanzar error para evitar 'Uncaught in promise'
   }
 };
 
@@ -41,6 +44,9 @@ export const getRecipes = async () => {
  */
 export const getRecipeById = async (id) => {
   try {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Configuración de Supabase incompleta");
+    }
     const { data, error } = await supabase
       .from("recipes")
       .select("*")
@@ -51,7 +57,7 @@ export const getRecipeById = async (id) => {
     return data;
   } catch (error) {
     console.error(`Error al obtener receta ${id}:`, error);
-    throw error;
+    return null; // Devolver null en lugar de lanzar error
   }
 };
 

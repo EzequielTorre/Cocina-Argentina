@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { useRecipes } from "../context/RecipeContext";
 import RecipeCard from "./RecipeCard";
-import LoadingSpinner from "./ui/LoadingSpinner";
+import RecipeCardSkeleton from "./ui/RecipeCardSkeleton";
 import ErrorAlert from "./ui/ErrorAlert";
 
 const Home = () => {
@@ -88,7 +88,13 @@ const Home = () => {
           </h2>
 
           {loading ? (
-            <LoadingSpinner message="Cargando recetas..." />
+            <Row xs={1} md={2} lg={3} className="g-4">
+              {[...Array(3)].map((_, idx) => (
+                <Col key={idx}>
+                  <RecipeCardSkeleton />
+                </Col>
+              ))}
+            </Row>
           ) : error ? (
             <ErrorAlert message={error} variant="warning" />
           ) : featuredRecipes.length === 0 ? (
