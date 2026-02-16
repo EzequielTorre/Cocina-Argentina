@@ -16,6 +16,31 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
+ * Adaptador para normalizar una fila de receta al mismo shape
+ * @param {Object} row - Fila original proveniente de Supabase
+ * @returns {Object} Objeto receta con shape estandarizado
+ */
+const normalizeRecipe = (row = {}) => {
+  const instructionsRaw =
+    row.instruccions || row.instrucciones || row.instructions || "";
+  const ingredientsRaw = row.ingredientes || row.ingredients || [];
+
+  return {
+    id: row.id ?? null,
+    title: row.title ?? "",
+    description: row.descriptions ?? row.description ?? "",
+    instructions: Array.isArray(instructionsRaw)
+      ? instructionsRaw.join("\n")
+      : (instructionsRaw ?? ""),
+    category: row.category ?? "",
+    time: row.time ?? null,
+    difficulty: row.difficulty ?? "",
+    image: row.image ?? "",
+    ingredients: Array.isArray(ingredientsRaw) ? ingredientsRaw : [],
+  };
+};
+
+/**
  * Función para obtener todas las recetas
  * @returns {Promise<Array>} Array con todas las recetas
  */
@@ -30,7 +55,7 @@ export const getRecipes = async () => {
       .order("id", { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeRecipe);
   } catch (error) {
     console.error("Error al obtener recetas:", error);
     return []; // Devolver array vacío en lugar de lanzar error para evitar 'Uncaught in promise'
@@ -54,7 +79,7 @@ export const getRecipeById = async (id) => {
       .single();
 
     if (error) throw error;
-    return data;
+    return data ? normalizeRecipe(data) : null;
   } catch (error) {
     console.error(`Error al obtener receta ${id}:`, error);
     return null; // Devolver null en lugar de lanzar error
@@ -136,7 +161,7 @@ export const searchRecipes = async (searchTerm) => {
       );
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeRecipe);
   } catch (error) {
     console.error("Error en búsqueda:", error);
     throw error;
@@ -160,7 +185,7 @@ export const getRecipesByCategory = async (category) => {
       .eq("category", category);
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(normalizeRecipe);
   } catch (error) {
     console.error(`Error al obtener recetas de "${category}":`, error);
     throw error;
