@@ -1,11 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
+import { upsertRating, getRecipeRatingStats } from "../services/supabaseClient";
 
 const RatingsContext = createContext();
 
 export const RatingsProvider = ({ children }) => {
   const [ratings, setRatings] = useState({});
+  const [remoteStats, setRemoteStats] = useState({});
+  const { user } = useUser();
 
-  // Cargar ratings desde localStorage al iniciar
+  // Cargar ratings desde localStorage al iniciar (cache local)
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem("ratings") || "{}");
@@ -21,7 +25,7 @@ export const RatingsProvider = ({ children }) => {
     localStorage.setItem("ratings", JSON.stringify(ratings));
   }, [ratings]);
 
-  const setRating = (recipeId, rating) => {
+  const setRating = async (recipeId, rating) => {
     if (rating < 0 || rating > 5) {
       console.error("Rating debe estar entre 0 y 5");
       return;
@@ -30,6 +34,18 @@ export const RatingsProvider = ({ children }) => {
       ...prev,
       [recipeId]: rating,
     }));
+
+    if (user?.id) {
+      await upsertRating({ userId: user.id, recipeId, value: rating });
+      const stats = await getRecipeRatingStats({
+        recipeId,
+        userId: user.id,
+      });
+      setRemoteStats((prev) => ({
+        ...prev,
+        [recipeId]: stats,
+      }));
+    }
   };
 
   const getRating = (recipeId) => {
@@ -38,6 +54,16 @@ export const RatingsProvider = ({ children }) => {
 
   const getAllRatings = () => ratings;
 
+  const getRatingStats = (recipeId) => {
+    return (
+      remoteStats[recipeId] || {
+        average: getRating(recipeId),
+        count: 0,
+        userRating: getRating(recipeId),
+      }
+    );
+  };
+
   return (
     <RatingsContext.Provider
       value={{
@@ -45,6 +71,7 @@ export const RatingsProvider = ({ children }) => {
         setRating,
         getRating,
         getAllRatings,
+        getRatingStats,
       }}
     >
       {children}

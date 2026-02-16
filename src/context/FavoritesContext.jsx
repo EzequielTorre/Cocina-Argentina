@@ -1,9 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
+import {
+  getUserFavorites,
+  toggleFavoriteRemote,
+} from "../services/supabaseClient";
 
 const FavoritesContext = createContext();
 
 export const FavoritesProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
+  const { user } = useUser();
 
   // Cargar favoritos desde localStorage al iniciar
   useEffect(() => {
@@ -16,22 +22,58 @@ export const FavoritesProvider = ({ children }) => {
     }
   }, []);
 
-  // Guardar en localStorage cuando cambian los favoritos
+  // Cuando el usuario está logueado, sincronizar con Supabase
+  useEffect(() => {
+    const syncFavorites = async () => {
+      if (!user?.id) {
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        return;
+      }
+
+      try {
+        const remote = await getUserFavorites(user.id);
+        setFavorites(remote);
+      } catch (error) {
+        console.error("Error sincronizando favoritos remotos:", error);
+      }
+    };
+
+    syncFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Guardar en localStorage cuando cambian los favoritos (cache local)
   useEffect(() => {
     localStorage.setItem("favorites", JSON.stringify(favorites));
   }, [favorites]);
 
-  const addFavorite = (recipeId) => {
+  const addFavorite = async (recipeId) => {
     setFavorites((prev) => {
       if (!prev.includes(recipeId)) {
         return [...prev, recipeId];
       }
       return prev;
     });
+
+    if (user?.id) {
+      await toggleFavoriteRemote({
+        userId: user.id,
+        recipeId,
+        isFav: false,
+      });
+    }
   };
 
-  const removeFavorite = (recipeId) => {
+  const removeFavorite = async (recipeId) => {
     setFavorites((prev) => prev.filter((id) => id !== recipeId));
+
+    if (user?.id) {
+      await toggleFavoriteRemote({
+        userId: user.id,
+        recipeId,
+        isFav: true,
+      });
+    }
   };
 
   const toggleFavorite = (recipeId) => {

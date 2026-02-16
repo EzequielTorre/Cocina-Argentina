@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
-import { FaFire, FaSun, FaMoon, FaHeart } from "react-icons/fa";
+import { FaFire, FaSun, FaMoon, FaHeart, FaPlus } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 
@@ -85,6 +85,14 @@ const Header = () => {
                 className="d-flex align-items-center gap-1"
               >
                 <FaHeart className="text-danger" /> Favoritos
+              </Nav.Link>
+              <Nav.Link
+                as={Link}
+                to="/mis-recetas"
+                active={location.pathname === "/mis-recetas"}
+                className="d-flex align-items-center gap-1"
+              >
+                <FaPlus /> Mis recetas
               </Nav.Link>
             </SignedIn>
           </Nav>

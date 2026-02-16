@@ -6,6 +6,7 @@ import RecipeDetail from "./components/RecipeDetail";
 import Home from "./components/Home";
 import Contact from "./components/Contact";
 import Favorites from "./components/Favorites";
+import MyRecipes from "./components/MyRecipes";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Register from "./components/Register";
@@ -29,6 +30,19 @@ function App() {
                 <>
                   <SignedIn>
                     <Favorites />
+                  </SignedIn>
+                  <SignedOut>
+                    <RedirectToSignIn />
+                  </SignedOut>
+                </>
+              }
+            />
+            <Route
+              path="/mis-recetas"
+              element={
+                <>
+                  <SignedIn>
+                    <MyRecipes />
                   </SignedIn>
                   <SignedOut>
                     <RedirectToSignIn />

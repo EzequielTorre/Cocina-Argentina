@@ -29,7 +29,7 @@ const RecipeDetail = () => {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { getRating, setRating } = useRatings();
+  const { getRating, setRating, getRatingStats } = useRatings();
   const [cookingMode, setCookingMode] = useState(false);
   const [unitSystem, setUnitSystem] = useState("metric"); // 'metric' o 'imperial'
 
@@ -89,6 +89,9 @@ const RecipeDetail = () => {
   }, [id, getRecipeById]);
 
   const rating = recipe ? getRating(recipe.id) : 0;
+  const ratingStats = recipe
+    ? getRatingStats(recipe.id)
+    : { average: 0, count: 0 };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -162,6 +165,10 @@ const RecipeDetail = () => {
                 interactive={true}
                 size="lg"
               />
+              <p className="small text-secondary mt-2 mb-0">
+                Promedio: {ratingStats.average.toFixed(1)} ★ ·{" "}
+                {ratingStats.count} voto{ratingStats.count === 1 ? "" : "s"}
+              </p>
             </div>
 
             <div className="d-flex flex-wrap gap-2 pt-3 border-top">
