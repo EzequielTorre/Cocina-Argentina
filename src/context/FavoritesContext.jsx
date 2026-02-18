@@ -48,31 +48,41 @@ export const FavoritesProvider = ({ children }) => {
   }, [favorites]);
 
   const addFavorite = async (recipeId) => {
-    setFavorites((prev) => {
-      if (!prev.includes(recipeId)) {
-        return [...prev, recipeId];
-      }
-      return prev;
-    });
+    const prev = favorites;
+    const next = prev.includes(recipeId) ? prev : [...prev, recipeId];
+    setFavorites(next);
 
     if (user?.id) {
-      await toggleFavoriteRemote({
+      const result = await toggleFavoriteRemote({
         userId: user.id,
         recipeId,
         isFav: false,
       });
+      if (!result?.success) {
+        setFavorites(prev);
+        console.error(
+          "No se pudo agregar favorito en Supabase:",
+          result?.error,
+        );
+      }
     }
   };
 
   const removeFavorite = async (recipeId) => {
-    setFavorites((prev) => prev.filter((id) => id !== recipeId));
+    const prev = favorites;
+    const next = prev.filter((id) => id !== recipeId);
+    setFavorites(next);
 
     if (user?.id) {
-      await toggleFavoriteRemote({
+      const result = await toggleFavoriteRemote({
         userId: user.id,
         recipeId,
         isFav: true,
       });
+      if (!result?.success) {
+        setFavorites(prev);
+        console.error("No se pudo quitar favorito en Supabase:", result?.error);
+      }
     }
   };
 

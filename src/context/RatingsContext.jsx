@@ -30,13 +30,21 @@ export const RatingsProvider = ({ children }) => {
       console.error("Rating debe estar entre 0 y 5");
       return;
     }
-    setRatings((prev) => ({
-      ...prev,
-      [recipeId]: rating,
-    }));
+    const prevRatings = ratings;
+    const nextRatings = { ...ratings, [recipeId]: rating };
+    setRatings(nextRatings);
 
     if (user?.id) {
-      await upsertRating({ userId: user.id, recipeId, value: rating });
+      const result = await upsertRating({
+        userId: user.id,
+        recipeId,
+        value: rating,
+      });
+      if (!result?.success) {
+        setRatings(prevRatings);
+        console.error("No se pudo guardar el rating en Supabase:", result?.error);
+        return;
+      }
       const stats = await getRecipeRatingStats({
         recipeId,
         userId: user.id,

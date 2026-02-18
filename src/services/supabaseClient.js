@@ -169,9 +169,13 @@ export const upsertRating = async ({ userId, recipeId, value }) => {
       },
     );
 
-    if (error) throw error;
+    if (error) {
+      return { success: false, error };
+    }
+    return { success: true };
   } catch (error) {
     console.error("Error al guardar rating:", error);
+    return { success: false, error };
   }
 };
 
@@ -243,16 +247,22 @@ export const toggleFavoriteRemote = async ({ userId, recipeId, isFav }) => {
         .delete()
         .eq("user_id", userId)
         .eq("recipe_id", recipeId);
-      if (error) throw error;
+      if (error) {
+        return { success: false, error };
+      }
     } else {
       const { error } = await supabase.from("favorites").insert({
         user_id: userId,
         recipe_id: recipeId,
       });
-      if (error) throw error;
+      if (error) {
+        return { success: false, error };
+      }
     }
+    return { success: true };
   } catch (error) {
     console.error("Error al sincronizar favorito:", error);
+    return { success: false, error };
   }
 };
 
