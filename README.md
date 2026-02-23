@@ -203,12 +203,22 @@ Crea un archivo `.env` en la raíz del proyecto:
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
 VITE_CLERK_SECRET_KEY=sk_test_xxxxx
 
+# Supabase (para favoritos y calificaciones)
+VITE_SUPABASE_URL=https://xxxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyxxxxxxx
+
 # API Endpoints (opcional)
 VITE_API_BASE_URL=https://api.example.com
 
 # Environment
 VITE_ENV=development
 ```
+
+> **Nota:** la aplicación usa Supabase únicamente para almacenar favoritos y calificaciones. Si tu base de datos aún no tiene filas para todas las recetas locales, al iniciar la aplicación se insertarán automáticamente gracias al script `ensureRecipes`.
+
+> Si deseas precargar tu tabla de recetas manualmente, puedes ejecutar un pequeño script de node o usar el panel SQL de Supabase para insertar los registros desde `src/components/data/recipes.json`. Asegúrate de que la tabla `recipes` tenga columnas compatibles (`id`, `title`, `description`, `category`, `image`, `time`, `difficulty`, `ingredients json` o `text[]`, `instructions text`).
+
+**Importante:** Todas las variables de Clerk y Supabase deben ir precedidas con `VITE_` para que Vite las inyecte en el bundle.
 
 **Importante:** Todas las variables de Clerk deben ir precedidas con `VITE_` para que Vite las inyecte en el bundle.
 

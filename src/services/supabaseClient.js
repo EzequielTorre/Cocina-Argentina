@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import recipesData from "../components/data/recipes.json";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -91,11 +92,16 @@ export const getRecipeById = async (id) => {
  * @param {Object} recipe - Objeto con datos de la receta
  * @returns {Promise<Object>} La receta creada
  */
-export const createRecipe = async (recipe) => {
+export const createRecipe = async (recipe, { userId, pending } = {}) => {
   try {
+    // si nos pasan un userId lo añadimos automáticamente
+    const payload = { ...recipe };
+    if (userId) payload.created_by = userId;
+    if (pending) payload.status = pending;
+
     const { data, error } = await supabase
       .from("recipes")
-      .insert([recipe])
+      .insert([payload])
       .select()
       .single();
 
@@ -103,6 +109,7 @@ export const createRecipe = async (recipe) => {
     return data;
   } catch (error) {
     console.error("Error al crear receta:", error);
+    console.debug("Payload enviado a Supabase:", recipe, { userId, pending });
     throw error;
   }
 };
@@ -153,25 +160,51 @@ export const deleteRecipe = async (id) => {
  * - user_id (text)
  * - recipe_id (integer)
  * - value (integer)
+ *
+ * Nota: La restricción única debe ser (user_id, recipe_id), pero si solo existe
+ * en user_id, usamos el patrón UPDATE + INSERT (solo si no hay filas afectadas)
  */
 export const upsertRating = async ({ userId, recipeId, value }) => {
   if (!userId || !recipeId) return;
 
+  const recipeNum = parseInt(recipeId);
+  if (isNaN(recipeNum)) {
+    console.error("upsertRating: recipeId inválido", recipeId);
+    return { success: false, error: new Error("recipeId inválido") };
+  }
+
+  // asegurarnos de que la receta esté presente en la tabla
+  const recipeToEnsure = recipesData.find((r) => r.id === recipeNum);
+  if (recipeToEnsure) {
+    // eslint-disable-next-line no-use-before-define
+    await ensureRecipes([recipeToEnsure]);
+  }
+
   try {
-    const { error } = await supabase.from("ratings").upsert(
-      {
+    // Primero intentar UPDATE
+    const { error: updateError, count } = await supabase
+      .from("ratings")
+      .update({ value })
+      .eq("user_id", userId)
+      .eq("recipe_id", recipeNum);
+
+    if (updateError) {
+      return { success: false, error: updateError };
+    }
+
+    // Si no se actualizó ninguna fila, insertar nuevo registro
+    if (count === 0) {
+      const { error: insertError } = await supabase.from("ratings").insert({
         user_id: userId,
         recipe_id: recipeId,
         value,
-      },
-      {
-        onConflict: "user_id,recipe_id",
-      },
-    );
+      });
 
-    if (error) {
-      return { success: false, error };
+      if (insertError) {
+        return { success: false, error: insertError };
+      }
     }
+
     return { success: true };
   } catch (error) {
     console.error("Error al guardar rating:", error);
@@ -213,6 +246,41 @@ export const getRecipeRatingStats = async ({ recipeId, userId }) => {
   }
 };
 
+// Sincroniza recetas locales con la tabla de Supabase.
+export const ensureRecipes = async (recipes) => {
+  if (!Array.isArray(recipes) || recipes.length === 0) return;
+  try {
+    const { data: existing, error: fetchErr } = await supabase
+      .from("recipes")
+      .select("id");
+    if (fetchErr) throw fetchErr;
+
+    const existingIds = new Set((existing || []).map((r) => r.id));
+    const toInsert = recipes
+      .filter((r) => !existingIds.has(r.id))
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        category: r.category,
+        image: r.image,
+        time: r.time,
+        difficulty: r.difficulty,
+        ingredients: r.ingredients,
+        instructions: r.instructions,
+      }));
+    if (toInsert.length > 0) {
+      const { error: insertErr } = await supabase
+        .from("recipes")
+        .insert(toInsert);
+      if (insertErr)
+        console.error("Error al insertar recetas faltantes:", insertErr);
+    }
+  } catch (error) {
+    console.error("Error en ensureRecipes:", error);
+  }
+};
+
 /**
  * Favoritos persistentes
  * Requiere tabla "favorites" con columnas:
@@ -230,7 +298,7 @@ export const getUserFavorites = async (userId) => {
       .eq("user_id", userId);
 
     if (error) throw error;
-    return (data || []).map((row) => row.recipe_id);
+    return (data || []).map((row) => parseInt(row.recipe_id));
   } catch (error) {
     console.error("Error al obtener favoritos:", error);
     return [];
@@ -238,7 +306,20 @@ export const getUserFavorites = async (userId) => {
 };
 
 export const toggleFavoriteRemote = async ({ userId, recipeId, isFav }) => {
-  if (!userId || !recipeId) return;
+  if (!userId || recipeId == null) return;
+  const recipeNum = parseInt(recipeId);
+  // ensure integer
+  if (isNaN(recipeNum)) {
+    console.error("toggleFavoriteRemote: recipeId inválido", recipeId);
+    return;
+  }
+
+  // garantizar que la receta exista en la tabla antes de alternar el favorito
+  const recipeToEnsure = recipesData.find((r) => r.id === recipeNum);
+  if (recipeToEnsure) {
+    // eslint-disable-next-line no-use-before-define
+    await ensureRecipes([recipeToEnsure]);
+  }
 
   try {
     if (isFav) {
@@ -253,7 +334,7 @@ export const toggleFavoriteRemote = async ({ userId, recipeId, isFav }) => {
     } else {
       const { error } = await supabase.from("favorites").insert({
         user_id: userId,
-        recipe_id: recipeId,
+        recipe_id: recipeNum,
       });
       if (error) {
         return { success: false, error };

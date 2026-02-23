@@ -58,12 +58,13 @@ const MyRecipes = () => {
           .map((i) => i.trim())
           .filter(Boolean),
         instructions: form.instructions,
-        // Campos opcionales si existen en Supabase:
-        // status: "pending",
-        // created_by: user.id,
       };
 
-      const created = await createRecipe(recipePayload);
+      const created = await createRecipe(recipePayload, {
+        userId: user.id,
+        // enviamos `pending` si tu tabla requiere un estado inicial
+        pending: "pending",
+      });
 
       setSuccess(
         "Receta enviada correctamente. Puede requerir aprobación antes de ser visible.",
@@ -76,8 +77,9 @@ const MyRecipes = () => {
         }, 1200);
       }
     } catch (err) {
-      setError("Hubo un error al crear la receta. Intenta nuevamente.");
-      console.error(err);
+      const msg = err?.message || err?.error || "Desconocido";
+      setError(`Hubo un error al crear la receta: ${msg}. Intenta nuevamente.`);
+      console.error("Error detallado creación receta:", err);
     } finally {
       setSubmitting(false);
     }
@@ -106,7 +108,10 @@ const MyRecipes = () => {
             </Alert>
           )}
 
-          <Form onSubmit={handleSubmit} className="bg-white p-4 rounded-3 shadow-sm">
+          <Form
+            onSubmit={handleSubmit}
+            className="bg-white p-4 rounded-3 shadow-sm"
+          >
             <Form.Group className="mb-3">
               <Form.Label>Título</Form.Label>
               <Form.Control
@@ -195,7 +200,9 @@ const MyRecipes = () => {
                 name="ingredients"
                 value={form.ingredients}
                 onChange={handleChange}
-                placeholder={"500g de carne picada\n1 cebolla grande\nSal, pimienta..."}
+                placeholder={
+                  "500g de carne picada\n1 cebolla grande\nSal, pimienta..."
+                }
               />
             </Form.Group>
 
@@ -207,7 +214,9 @@ const MyRecipes = () => {
                 name="instructions"
                 value={form.instructions}
                 onChange={handleChange}
-                placeholder={"1. Precalentar el horno a 200°C...\n2. Mezclar los ingredientes..."}
+                placeholder={
+                  "1. Precalentar el horno a 200°C...\n2. Mezclar los ingredientes..."
+                }
                 required
               />
             </Form.Group>
@@ -233,4 +242,3 @@ const MyRecipes = () => {
 };
 
 export default MyRecipes;
-

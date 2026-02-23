@@ -81,7 +81,6 @@ const Contact = () => {
       };
       existingMessages.push(newMessage);
       localStorage.setItem("contactMessages", JSON.stringify(existingMessages));
-      console.log("✅ Mensaje guardado en localStorage:", newMessage);
     } catch (error) {
       console.error("❌ Error al guardar en localStorage:", error);
       throw error;

@@ -3,6 +3,7 @@ import recipesData from "../components/data/recipes.json";
 import {
   getRecipes,
   getRecipeById as getRecipeByIdAPI,
+  ensureRecipes,
 } from "../services/supabaseClient";
 
 // Crear el contexto
@@ -25,7 +26,19 @@ export function RecipeProvider({ children }) {
         setError(null);
 
         // Intentar obtener recetas de Supabase
-        const data = await getRecipes();
+        let data = await getRecipes();
+
+        // en caso de que no haya datos remotos volvemos a locales
+        if (!data || data.length === 0) {
+          data = recipesData;
+        }
+
+        // garantizar que la tabla de recetas contenga todas las recetas locales
+        // esto evitará errores al guardar favoritos/ratings de recetas faltantes
+        ensureRecipes(data).catch((e) =>
+          console.warn("Error asegurando recetas en Supabase:", e),
+        );
+
         setRecipes(data);
       } catch (err) {
         console.warn(
@@ -35,6 +48,11 @@ export function RecipeProvider({ children }) {
         // Fallback: usar datos locales si Supabase falla
         setRecipes(recipesData);
         setError("Usando datos locales (Supabase no disponible)");
+
+        // también intentamos poblar la tabla cuando volvamos a tener conexión
+        ensureRecipes(recipesData).catch((e) =>
+          console.warn("Error asegurando recetas en Supabase:", e),
+        );
       } finally {
         setLoading(false);
       }
