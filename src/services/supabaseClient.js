@@ -112,27 +112,27 @@ export const getRecipeById = async (id) => {
  * @returns {Promise<Object>} La receta creada
  */
 export const createRecipe = async (recipe, { userId, pending } = {}) => {
-  // preparar ingredients para envío:
-  // - si es array, unir con saltos de línea y luego formar literal
-  // - si es string, convertir a literal escapanando comillas
+  // preparar ingredients para envío: convertimos siempre a literal PostgreSQL
+  // incluso si la columna es text y no text[], esto sólo afectará al texto
   const payload = { ...recipe };
   const makeLiteral = (arr) => {
     const esc = (s) => s.replace(/"/g, '\\"');
     return `{${arr.map((i) => `"${esc(i)}"`).join(",")}}`;
   };
 
-  if (Array.isArray(payload.ingredients)) {
-    const arr = payload.ingredients
-      .map((i) => String(i).trim())
-      .filter(Boolean);
-    payload.ingredients = makeLiteral(arr);
-  } else if (typeof payload.ingredients === "string") {
-    const arr = payload.ingredients
-      .split("\n")
+  if (payload.ingredients != null) {
+    const raw = Array.isArray(payload.ingredients)
+      ? payload.ingredients.join("\n")
+      : String(payload.ingredients);
+    const arr = raw
+      .split(/\r?\n/)
       .map((i) => i.trim())
       .filter(Boolean);
     payload.ingredients = makeLiteral(arr);
   }
+
+  // debug: mostrar exactamente lo que se va a enviar
+  console.debug("payload antes de insertar receta:", payload);
 
   try {
     // Insertamos sólo los campos que el usuario ha completado.

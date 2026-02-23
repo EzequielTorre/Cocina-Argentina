@@ -74,7 +74,15 @@ const MyRecipes = () => {
       }
     } catch (err) {
       const msg = err?.message || err?.error || "Desconocido";
-      setError(`Hubo un error al crear la receta: ${msg}. Intenta nuevamente.`);
+      // mostrar payload en el mensaje para ayudar a diagnosticar
+      setError(
+        `Hubo un error al crear la receta: ${msg}. Datos enviados: ${JSON.stringify(
+          {
+            title: form.title,
+            ingredients: form.ingredients,
+          },
+        )}`,
+      );
       console.error("Error detallado creación receta:", err);
     } finally {
       setSubmitting(false);

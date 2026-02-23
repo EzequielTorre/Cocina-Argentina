@@ -216,7 +216,14 @@ VITE_ENV=development
 
 > **Nota:** la aplicación usa Supabase únicamente para almacenar favoritos y calificaciones. Si tu base de datos aún no tiene filas para todas las recetas locales, al iniciar la aplicación se insertarán automáticamente gracias al script `ensureRecipes`.
 
-> Si deseas precargar tu tabla de recetas manualmente, puedes ejecutar un pequeño script de node o usar el panel SQL de Supabase para insertar los registros desde `src/components/data/recipes.json`. Asegúrate de que la tabla `recipes` tenga columnas compatibles (`id`, `title`, `description`, `category`, `image`, `time`, `difficulty`, `ingredients json` o `text[]`, `instructions text`).
+> Si deseas precargar tu tabla de recetas manualmente, puedes ejecutar un pequeño script de node o usar el panel SQL de Supabase para insertar los registros desde `src/components/data/recipes.json`. Asegúrate de que la tabla `recipes` tenga columnas compatibles (`id`, `title`, `description`, `category`, `image`, `time`, `difficulty`, `instructions text`).
+
+> **Importante sobre ingredientes:** la aplicación envía actualmente la lista de
+> ingredientes como un literal PostgreSQL (`{"harina","huevo"}`) para mantener
+> compatibilidad con `text[]`. Si prefieres evitar convertir manualmente, puedes
+> simplemente cambiar la columna `ingredients` a tipo `text` o `json` en tu
+> base; en ese caso el valor se almacenará tal cual como texto con saltos de
+> línea y seguirá parseándose correctamente en el frontend.
 >
 > Nota: el código actual detecta y elimina automáticamente campos opcionales (`created_by`, `status`) si la tabla no los tiene, así que no es obligatorio añadirlos al esquema.
 
