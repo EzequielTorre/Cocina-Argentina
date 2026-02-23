@@ -217,10 +217,37 @@ VITE_ENV=development
 > **Nota:** la aplicación usa Supabase únicamente para almacenar favoritos y calificaciones. Si tu base de datos aún no tiene filas para todas las recetas locales, al iniciar la aplicación se insertarán automáticamente gracias al script `ensureRecipes`.
 
 > Si deseas precargar tu tabla de recetas manualmente, puedes ejecutar un pequeño script de node o usar el panel SQL de Supabase para insertar los registros desde `src/components/data/recipes.json`. Asegúrate de que la tabla `recipes` tenga columnas compatibles (`id`, `title`, `description`, `category`, `image`, `time`, `difficulty`, `ingredients json` o `text[]`, `instructions text`).
+>
+> Nota: el código actual detecta y elimina automáticamente campos opcionales (`created_by`, `status`) si la tabla no los tiene, así que no es obligatorio añadirlos al esquema.
 
 **Importante:** Todas las variables de Clerk y Supabase deben ir precedidas con `VITE_` para que Vite las inyecte en el bundle.
 
-**Importante:** Todas las variables de Clerk deben ir precedidas con `VITE_` para que Vite las inyecte en el bundle.
+### 🔧 Corregir esquema de favoritos
+
+Si al pulsar el corazón ves un error parecido a:
+
+```
+duplicate key value violates unique constraint "favorites_user_id_key"
+```
+
+significa que tu tabla `favorites` tiene una restricción única **solo** sobre `user_id`,
+lo cual impide que un mismo usuario marque más de una receta. La aplicación espera
+un índice compuesto `(user_id, recipe_id)`.
+
+Puedes arreglarlo en el editor SQL de Supabase ejecutando:
+
+```sql
+alter table favorites drop constraint if exists favorites_user_id_key;
+alter table favorites add constraint favorites_user_id_recipe_id_key
+  unique (user_id, recipe_id);
+```
+
+una vez hecho esto, la inserción funcionará correctamente y se guardarán varios
+favoritos por usuario. El cliente del frontend ya está preparado para ignorar el
+error mientras no hagas la corrección, pero no podrá almacenar más de una
+receta si la tabla permanece con la restricción incorrecta.
+
+```**Importante:** Todas las variables de Clerk deben ir precedidas con `VITE\_` para que Vite las inyecte en el bundle.
 
 Para obtener las claves de Clerk:
 

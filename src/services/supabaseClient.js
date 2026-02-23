@@ -93,15 +93,18 @@ export const getRecipeById = async (id) => {
  * @returns {Promise<Object>} La receta creada
  */
 export const createRecipe = async (recipe, { userId, pending } = {}) => {
-  try {
-    // si nos pasan un userId lo añadimos automáticamente
+  const buildPayload = ({ withUser = true, withStatus = true } = {}) => {
     const payload = { ...recipe };
-    if (userId) payload.created_by = userId;
-    if (pending) payload.status = pending;
+    if (withUser && userId) payload.created_by = userId;
+    if (withStatus && pending) payload.status = pending;
+    return payload;
+  };
 
+  try {
+    // intento normal
     const { data, error } = await supabase
       .from("recipes")
-      .insert([payload])
+      .insert([buildPayload()])
       .select()
       .single();
 
@@ -110,6 +113,32 @@ export const createRecipe = async (recipe, { userId, pending } = {}) => {
   } catch (error) {
     console.error("Error al crear receta:", error);
     console.debug("Payload enviado a Supabase:", recipe, { userId, pending });
+
+    // si el error se debe a columna inexistente, reintentar sin esos campos
+    const msg = error?.message || "";
+    let retryPayload = null;
+    if (msg.includes("'created_by'")) {
+      retryPayload = buildPayload({ withUser: false });
+    }
+    if (msg.includes("'status'")) {
+      retryPayload = retryPayload || buildPayload();
+      delete retryPayload.status;
+    }
+    if (retryPayload) {
+      try {
+        const { data: data2, error: err2 } = await supabase
+          .from("recipes")
+          .insert([retryPayload])
+          .select()
+          .single();
+        if (err2) throw err2;
+        return data2;
+      } catch (err2) {
+        console.error("Reintento fallido crear receta:", err2);
+        throw err2;
+      }
+    }
+
     throw error;
   }
 };
@@ -332,11 +361,35 @@ export const toggleFavoriteRemote = async ({ userId, recipeId, isFav }) => {
         return { success: false, error };
       }
     } else {
-      const { error } = await supabase.from("favorites").insert({
-        user_id: userId,
-        recipe_id: recipeNum,
-      });
+      // intentar upsert sobre la pareja (user_id, recipe_id) si existe el índice
+      let response;
+      try {
+        response = await supabase
+          .from("favorites")
+          .upsert(
+            { user_id: userId, recipe_id: recipeNum },
+            { onConflict: "user_id,recipe_id" },
+          );
+      } catch (e) {
+        // algunos backends más viejos no soportan onConflict; caemos a insert simple
+        response = await supabase.from("favorites").insert({
+          user_id: userId,
+          recipe_id: recipeNum,
+        });
+      }
+
+      const { error } = response;
       if (error) {
+        // si el único constraint es user_id, Supabase devuelve 23505
+        if (error.code === "23505") {
+          console.warn(
+            "duplicate key en favoritos; revisa el constraint de la tabla",
+            error.message,
+          );
+          // la tabla probablemente tenga UNIQUE(user_id) en lugar de
+          // UNIQUE(user_id, recipe_id); ver README para corrección.
+          return { success: true };
+        }
         return { success: false, error };
       }
     }
