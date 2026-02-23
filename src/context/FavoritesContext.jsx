@@ -61,7 +61,7 @@ export const FavoritesProvider = ({ children }) => {
         isFav: false,
       });
       if (!result?.success) {
-        setFavorites(prev);
+        // No revertimos el estado local para mejorar UX; registramos el fallo
         console.error(
           "No se pudo agregar favorito en Supabase (detalle):",
           result?.error,
@@ -83,7 +83,7 @@ export const FavoritesProvider = ({ children }) => {
         isFav: true,
       });
       if (!result?.success) {
-        setFavorites(prev);
+        // Mantener el cambio local; solo logueamos el error
         console.error(
           "No se pudo quitar favorito en Supabase (detalle):",
           result?.error,
@@ -100,7 +100,10 @@ export const FavoritesProvider = ({ children }) => {
     }
   };
 
-  const isFavorite = (recipeId) => favorites.includes(recipeId);
+  const isFavorite = (recipeId) => {
+    const idNum = typeof recipeId === "number" ? recipeId : parseInt(recipeId);
+    return favorites.includes(idNum);
+  };
 
   const getFavorites = () => favorites;
 

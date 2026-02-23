@@ -90,57 +90,42 @@ export const getRecipeById = async (id) => {
 /**
  * Función para crear una nueva receta (admin only)
  * @param {Object} recipe - Objeto con datos de la receta
+ * @param {Object} options - Opciones adicionales (userId, pending)
  * @returns {Promise<Object>} La receta creada
  */
 export const createRecipe = async (recipe, { userId, pending } = {}) => {
-  const buildPayload = ({ withUser = true, withStatus = true } = {}) => {
-    const payload = { ...recipe };
-    if (withUser && userId) payload.created_by = userId;
-    if (withStatus && pending) payload.status = pending;
-    return payload;
-  };
-
   try {
-    // intento normal sin usar .select() para no forzar lectura de columnas
-    let { data, error } = await supabase
+    // Insertamos sólo los campos que el usuario ha completado.
+    // No añadimos aquí "created_by" ni "status" para evitar errores
+    // si esas columnas no existen en la tabla.
+    const { data, error } = await supabase
       .from("recipes")
-      .insert([buildPayload()])
+      .insert([recipe])
       .single();
 
     if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error("Error al crear receta:", error);
-    console.debug("Payload enviado a Supabase:", recipe, { userId, pending });
 
-    // si el error se debe a columna inexistente, reintentar sin esos campos
-    const msg = error?.message || "";
-    let retryPayload = null;
-    if (msg.includes("'created_by'")) {
-      retryPayload = buildPayload({ withUser: false });
-    }
-    if (msg.includes("'status'")) {
-      retryPayload = retryPayload || buildPayload();
-      delete retryPayload.status;
-    }
-    if (retryPayload) {
-      console.info(
-        "intentando reinsertar sin columnas faltantes",
-        retryPayload,
-      );
+    // Si la inserción fue exitosa y tenemos campos adicionales,
+    // hacemos un UPDATE separado y silencioso.
+    if (data && data.id && (userId || pending)) {
+      const updates = {};
+      if (userId) updates.created_by = userId;
+      if (pending) updates.status = pending;
       try {
-        const { data: data2, error: err2 } = await supabase
+        await supabase
           .from("recipes")
-          .insert([retryPayload])
-          .single();
-        if (err2) throw err2;
-        return data2;
-      } catch (err2) {
-        console.error("Reintento fallido crear receta:", err2);
-        throw err2;
+          .update(updates, { returning: "minimal" })
+          .eq("id", data.id);
+      } catch (err) {
+        // Si la tabla no tiene esos campos, no nos interesa.
+        console.warn("No se pudieron aplicar campos opcionales:", err.message);
       }
     }
 
+    return data;
+  } catch (error) {
+    console.error("Error al crear receta:", error);
+    console.debug("Payload enviado a Supabase (sin extras):", recipe);
     throw error;
   }
 };
@@ -351,51 +336,78 @@ export const toggleFavoriteRemote = async ({ userId, recipeId, isFav }) => {
     // eslint-disable-next-line no-use-before-define
     await ensureRecipes([recipeToEnsure]);
   }
-
   try {
     if (isFav) {
       const { error } = await supabase
         .from("favorites")
         .delete()
         .eq("user_id", userId)
-        .eq("recipe_id", recipeId);
+        .eq("recipe_id", recipeNum);
       if (error) {
         return { success: false, error };
       }
-    } else {
-      // intentar upsert sobre la pareja (user_id, recipe_id) si existe el índice
-      let response;
-      try {
-        response = await supabase
-          .from("favorites")
-          .upsert(
-            { user_id: userId, recipe_id: recipeNum },
-            { onConflict: "user_id,recipe_id" },
-          );
-      } catch (e) {
-        // algunos backends más viejos no soportan onConflict; caemos a insert simple
-        response = await supabase.from("favorites").insert({
-          user_id: userId,
-          recipe_id: recipeNum,
-        });
-      }
+      return { success: true };
+    }
 
-      const { error } = response;
-      if (error) {
-        // si el único constraint es user_id, Supabase devuelve 23505
-        if (error.code === "23505") {
-          console.warn(
-            "duplicate key en favoritos; revisa el constraint de la tabla",
-            error.message,
-          );
-          // la tabla probablemente tenga UNIQUE(user_id) en lugar de
-          // UNIQUE(user_id, recipe_id); ver README para corrección.
+    // Intento principal: upsert con onConflict para (user_id,recipe_id)
+    try {
+      const resp = await supabase
+        .from("favorites")
+        .upsert(
+          { user_id: userId, recipe_id: recipeNum },
+          { onConflict: "user_id,recipe_id" },
+        );
+      if (resp?.error) {
+        // si es duplicate key (23505) lo ignoramos
+        if (resp.error.code === "23505") {
           return { success: true };
         }
-        return { success: false, error };
+        throw resp.error;
       }
+      return { success: true };
+    } catch (upsertErr) {
+      // Si el servidor no soporta onConflict (42P10) o falla, intentamos flujo manual
+      const msg = upsertErr?.message || "";
+      if (upsertErr?.code === "42P10" || msg.includes("ON CONFLICT")) {
+        try {
+          // comprobar si ya existe
+          const { data: existing, error: existErr } = await supabase
+            .from("favorites")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("recipe_id", recipeNum)
+            .limit(1);
+          if (existErr) throw existErr;
+          if (existing && existing.length > 0) {
+            return { success: true };
+          }
+
+          // intentar insert simple
+          const { error: insertErr } = await supabase.from("favorites").insert({
+            user_id: userId,
+            recipe_id: recipeNum,
+          });
+          if (insertErr) {
+            // si el constraint es solo user_id (23505), lo ignoramos (documentado en README)
+            if (insertErr.code === "23505") {
+              console.warn(
+                "Constraint único sobre user_id detectado:",
+                insertErr.message,
+              );
+              return { success: true };
+            }
+            return { success: false, error: insertErr };
+          }
+          return { success: true };
+        } catch (manualErr) {
+          console.error("Error flujo manual favoritos:", manualErr);
+          return { success: false, error: manualErr };
+        }
+      }
+
+      console.error("Error en upsert favoritos:", upsertErr);
+      return { success: false, error: upsertErr };
     }
-    return { success: true };
   } catch (error) {
     console.error("Error al sincronizar favorito:", error);
     return { success: false, error };

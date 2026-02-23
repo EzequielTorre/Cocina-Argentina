@@ -60,11 +60,9 @@ const MyRecipes = () => {
         instructions: form.instructions,
       };
 
-      const created = await createRecipe(recipePayload, {
-        userId: user.id,
-        // enviamos `pending` si tu tabla requiere un estado inicial
-        pending: "pending",
-      });
+      // no enviamos campos extras (created_by/status) por defecto
+      // para evitar conflictos si la tabla no los tiene
+      const created = await createRecipe(recipePayload);
 
       setSuccess(
         "Receta enviada correctamente. Puede requerir aprobación antes de ser visible.",
