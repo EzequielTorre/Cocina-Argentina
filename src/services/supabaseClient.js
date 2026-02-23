@@ -26,12 +26,22 @@ const normalizeRecipe = (row = {}) => {
     row.instruccions || row.instrucciones || row.instructions || "";
   let ingredientsRaw = row.ingredientes || row.ingredients || "";
 
-  // si es cadena, dividimos por saltos de línea para obtener array
+  // si es cadena, puede ser texto multinea o literal de array
   if (typeof ingredientsRaw === "string") {
-    ingredientsRaw = ingredientsRaw
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const text = ingredientsRaw.trim();
+    if (text.startsWith("{") && text.endsWith("}")) {
+      // eliminar llaves y dividir por comas respetando comillas
+      // ejemplo: {"a","b"}
+      ingredientsRaw = text
+        .slice(1, -1)
+        .split(/","?/) // conserva elementos entre comillas
+        .map((s) => s.replace(/^"|"$/g, ""));
+    } else {
+      ingredientsRaw = text
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
   }
 
   return {
@@ -102,10 +112,26 @@ export const getRecipeById = async (id) => {
  * @returns {Promise<Object>} La receta creada
  */
 export const createRecipe = async (recipe, { userId, pending } = {}) => {
-  // si recibimos array en ingredients, lo convertimos a texto
+  // preparar ingredients para envío:
+  // - si es array, unir con saltos de línea y luego formar literal
+  // - si es string, convertir a literal escapanando comillas
   const payload = { ...recipe };
+  const makeLiteral = (arr) => {
+    const esc = (s) => s.replace(/"/g, '\\"');
+    return `{${arr.map((i) => `"${esc(i)}"`).join(",")}}`;
+  };
+
   if (Array.isArray(payload.ingredients)) {
-    payload.ingredients = payload.ingredients.join("\n");
+    const arr = payload.ingredients
+      .map((i) => String(i).trim())
+      .filter(Boolean);
+    payload.ingredients = makeLiteral(arr);
+  } else if (typeof payload.ingredients === "string") {
+    const arr = payload.ingredients
+      .split("\n")
+      .map((i) => i.trim())
+      .filter(Boolean);
+    payload.ingredients = makeLiteral(arr);
   }
 
   try {
