@@ -101,11 +101,10 @@ export const createRecipe = async (recipe, { userId, pending } = {}) => {
   };
 
   try {
-    // intento normal
-    const { data, error } = await supabase
+    // intento normal sin usar .select() para no forzar lectura de columnas
+    let { data, error } = await supabase
       .from("recipes")
       .insert([buildPayload()])
-      .select()
       .single();
 
     if (error) throw error;
@@ -125,11 +124,14 @@ export const createRecipe = async (recipe, { userId, pending } = {}) => {
       delete retryPayload.status;
     }
     if (retryPayload) {
+      console.info(
+        "intentando reinsertar sin columnas faltantes",
+        retryPayload,
+      );
       try {
         const { data: data2, error: err2 } = await supabase
           .from("recipes")
           .insert([retryPayload])
-          .select()
           .single();
         if (err2) throw err2;
         return data2;
