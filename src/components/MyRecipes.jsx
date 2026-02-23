@@ -53,10 +53,8 @@ const MyRecipes = () => {
         time: form.time ? Number(form.time) : null,
         difficulty: form.difficulty,
         image: form.image || null,
-        ingredients: form.ingredients
-          .split("\n")
-          .map((i) => i.trim())
-          .filter(Boolean),
+        // Guardamos los ingredientes como texto con saltos de línea.
+        ingredients: form.ingredients,
         instructions: form.instructions,
       };
 

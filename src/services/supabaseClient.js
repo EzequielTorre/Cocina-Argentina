@@ -24,20 +24,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const normalizeRecipe = (row = {}) => {
   const instructionsRaw =
     row.instruccions || row.instrucciones || row.instructions || "";
-  let ingredientsRaw = row.ingredientes || row.ingredients || [];
+  let ingredientsRaw = row.ingredientes || row.ingredients || "";
 
-  // si PostgreSQL entregó un literal text[] como string, convertirlo a array
+  // si es cadena, dividimos por saltos de línea para obtener array
   if (typeof ingredientsRaw === "string") {
-    // eliminar llaves exteriores y dividir por coma respetando comillas
-    try {
-      // parse simple format {"a","b"}
-      ingredientsRaw = ingredientsRaw
-        .replace(/^\{|\}$/g, "")
-        .split(/","?/) // romper en comas o cierres de comillas
-        .map((s) => s.replace(/^"|"$/g, ""));
-    } catch {
-      ingredientsRaw = [ingredientsRaw];
-    }
+    ingredientsRaw = ingredientsRaw
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 
   return {
@@ -108,12 +102,10 @@ export const getRecipeById = async (id) => {
  * @returns {Promise<Object>} La receta creada
  */
 export const createRecipe = async (recipe, { userId, pending } = {}) => {
-  // convierte listas de ingredientes a literal PostgreSQL si es un array
+  // si recibimos array en ingredients, lo convertimos a texto
   const payload = { ...recipe };
   if (Array.isArray(payload.ingredients)) {
-    // PostgreSQL espera algo como {"ing1","ing2"}
-    const esc = (s) => s.replace(/"/g, '\\"');
-    payload.ingredients = `{${payload.ingredients.map((i) => `"${esc(i)}"`).join(",")}}`;
+    payload.ingredients = payload.ingredients.join("\n");
   }
 
   try {
