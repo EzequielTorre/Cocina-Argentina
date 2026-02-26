@@ -1,248 +1,52 @@
-import { useState } from "react";
-import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
-import { createRecipe } from "../services/supabaseClient";
+import React, { useEffect, useState } from "react";
+import { getRecipes } from "../services/supabaseClient";
 
-const emptyForm = {
-  title: "",
-  description: "",
-  category: "Plato Principal",
-  time: "",
-  difficulty: "Fácil",
-  image: "",
-  ingredients: "",
-  instructions: "",
-};
+export default function MyRecipes() {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const MyRecipes = () => {
-  const [form, setForm] = useState(emptyForm);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
-  const { user } = useUser();
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!user) {
-      setError("Debes iniciar sesión para crear una receta.");
-      return;
-    }
-
-    if (!form.title || !form.description || !form.instructions) {
-      setError("Título, descripción e instrucciones son obligatorios.");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-
-      const recipePayload = {
-        title: form.title,
-        description: form.description,
-        category: form.category,
-        time: form.time ? Number(form.time) : null,
-        difficulty: form.difficulty,
-        image: form.image || null,
-        // Guardamos los ingredientes como texto con saltos de línea.
-        ingredients: form.ingredients,
-        instructions: form.instructions,
-      };
-
-      // no enviamos campos extras (created_by/status) por defecto
-      // para evitar conflictos si la tabla no los tiene
-      const created = await createRecipe(recipePayload);
-
-      setSuccess(
-        "Receta enviada correctamente. Puede requerir aprobación antes de ser visible.",
-      );
-      setForm(emptyForm);
-
-      if (created?.id) {
-        setTimeout(() => {
-          navigate(`/receta/${created.id}`);
-        }, 1200);
+  useEffect(() => {
+    let mounted = true;
+    async function fetchAll() {
+      console.log("MyRecipes: fetching recipes...");
+      try {
+        const data = await getRecipes();
+        if (mounted) {
+          setRecipes(data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("MyRecipes fetch error:", err);
+        if (mounted) setError(err.message || "Error");
+      } finally {
+        if (mounted) setLoading(false);
       }
-    } catch (err) {
-      const msg = err?.message || err?.error || "Desconocido";
-      // mostrar payload en el mensaje para ayudar a diagnosticar
-      setError(
-        `Hubo un error al crear la receta: ${msg}. Datos enviados: ${JSON.stringify(
-          {
-            title: form.title,
-            ingredients: form.ingredients,
-          },
-        )}`,
-      );
-      console.error("Error detallado creación receta:", err);
-    } finally {
-      setSubmitting(false);
     }
-  };
+    fetchAll();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (loading) return <div>Cargando recetas...</div>;
+  if (error) return <div>Error al cargar recetas: {error}</div>;
+  if (!recipes.length) return <div>No hay recetas para mostrar</div>;
 
   return (
-    <Container className="py-5">
-      <Row className="justify-content-center">
-        <Col md={8} lg={7}>
-          <h1 className="display-5 fw-bold mb-3 text-center">
-            Crear nueva receta
-          </h1>
-          <p className="text-secondary text-center mb-4">
-            Comparte tus propias creaciones con la comunidad de Cocina
-            Argentina.
-          </p>
-
-          {error && (
-            <Alert variant="danger" className="mb-3">
-              {error}
-            </Alert>
-          )}
-          {success && (
-            <Alert variant="success" className="mb-3">
-              {success}
-            </Alert>
-          )}
-
-          <Form
-            onSubmit={handleSubmit}
-            className="bg-white p-4 rounded-3 shadow-sm"
-          >
-            <Form.Group className="mb-3">
-              <Form.Label>Título</Form.Label>
-              <Form.Control
-                type="text"
-                name="title"
-                value={form.title}
-                onChange={handleChange}
-                placeholder="Ej. Empanadas de carne jugosas"
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Descripción breve</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Una breve descripción de tu receta"
-                required
-              />
-            </Form.Group>
-
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Categoría</Form.Label>
-                  <Form.Select
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                  >
-                    <option>Plato Principal</option>
-                    <option>Entrada</option>
-                    <option>Postre</option>
-                    <option>Bebida</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group>
-                  <Form.Label>Tiempo (min)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    name="time"
-                    value={form.time}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group>
-                  <Form.Label>Dificultad</Form.Label>
-                  <Form.Select
-                    name="difficulty"
-                    value={form.difficulty}
-                    onChange={handleChange}
-                  >
-                    <option>Fácil</option>
-                    <option>Medio</option>
-                    <option>Difícil</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label>URL de imagen (opcional)</Form.Label>
-              <Form.Control
-                type="url"
-                name="image"
-                value={form.image}
-                onChange={handleChange}
-                placeholder="https://..."
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label>Ingredientes (uno por línea)</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={4}
-                name="ingredients"
-                value={form.ingredients}
-                onChange={handleChange}
-                placeholder={
-                  "500g de carne picada\n1 cebolla grande\nSal, pimienta..."
-                }
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-4">
-              <Form.Label>Instrucciones</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={6}
-                name="instructions"
-                value={form.instructions}
-                onChange={handleChange}
-                placeholder={
-                  "1. Precalentar el horno a 200°C...\n2. Mezclar los ingredientes..."
-                }
-                required
-              />
-            </Form.Group>
-
-            <div className="d-flex justify-content-end gap-2">
-              <Button
-                type="button"
-                variant="outline-secondary"
-                onClick={() => navigate(-1)}
-                disabled={submitting}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" variant="primary" disabled={submitting}>
-                {submitting ? "Guardando..." : "Guardar receta"}
-              </Button>
+    <div>
+      <h2>Recetas</h2>
+      <ul>
+        {recipes.map((r) => (
+          <li key={r.id}>
+            <strong>{r.title}</strong> — {r.category} —{" "}
+            {r.time ? `${r.time} min` : ""}
+            <div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>
+              {r.ingredientsText}
             </div>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
-};
-
-export default MyRecipes;
+}
