@@ -9,16 +9,17 @@ export default function MyRecipes() {
   useEffect(() => {
     let mounted = true;
     async function fetchAll() {
-      console.log("MyRecipes: fetching recipes...");
       try {
+        console.log("MyRecipes: fetching recipes...");
         const data = await getRecipes();
+        console.log("MyRecipes: received", data.length, "recipes");
         if (mounted) {
           setRecipes(data);
           setError(null);
         }
       } catch (err) {
         console.error("MyRecipes fetch error:", err);
-        if (mounted) setError(err.message || "Error");
+        if (mounted) setError(err.message || "Error al cargar recetas");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -38,9 +39,9 @@ export default function MyRecipes() {
       <h2>Recetas</h2>
       <ul>
         {recipes.map((r) => (
-          <li key={r.id}>
-            <strong>{r.title}</strong> — {r.category} —{" "}
-            {r.time ? `${r.time} min` : ""}
+          <li key={r.id} style={{ marginBottom: 12 }}>
+            <strong>{r.title}</strong> — {r.category}{" "}
+            {r.time ? `— ${r.time} min` : ""}
             <div style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>
               {r.ingredientsText}
             </div>
