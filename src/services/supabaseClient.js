@@ -182,7 +182,7 @@ export const getUserFavorites = async (userId) => {
   return (data || []).map((r) => r.recipe_id);
 };
 
-export const toggleFavoriteRemote = async (userId, recipeId) => {
+export const toggleFavoriteRemote = async ({ userId, recipeId }) => {
   if (!userId || !recipeId) throw new Error("userId and recipeId required");
 
   const { data: existing, error: selErr } = await supabase
@@ -192,7 +192,7 @@ export const toggleFavoriteRemote = async (userId, recipeId) => {
 
   if (selErr) {
     console.error("toggleFavoriteRemote select error:", selErr);
-    throw selErr;
+    return { success: false, error: selErr };
   }
 
   if (existing && existing.length > 0) {
@@ -203,9 +203,9 @@ export const toggleFavoriteRemote = async (userId, recipeId) => {
 
     if (delErr) {
       console.error("toggleFavoriteRemote delete error:", delErr);
-      throw delErr;
+      return { success: false, error: delErr };
     }
-    return { removed: true };
+    return { success: true, removed: true };
   } else {
     const { data: insData, error: insErr } = await supabase
       .from("favorites")
@@ -215,13 +215,13 @@ export const toggleFavoriteRemote = async (userId, recipeId) => {
 
     if (insErr) {
       console.error("toggleFavoriteRemote insert error:", insErr);
-      throw insErr;
+      return { success: false, error: insErr };
     }
-    return { added: true, id: insData.id };
+    return { success: true, added: true, id: insData.id };
   }
 };
 
-export const upsertRating = async (userId, recipeId, rating) => {
+export const upsertRating = async ({ userId, recipeId, rating }) => {
   if (!userId || !recipeId) throw new Error("userId and recipeId required");
   const payload = { user_id: userId, recipe_id: recipeId, rating };
   // Intentar upsert (requiere constraint unique on (user_id, recipe_id))
@@ -235,43 +235,50 @@ export const upsertRating = async (userId, recipeId, rating) => {
       .select()
       .single();
     if (error) throw error;
-    return data;
+    return { success: true, data };
   } catch (err) {
     // Fallback: buscar y actualizar o insertar
-    const { data: existing, error: selErr } = await supabase
-      .from("ratings")
-      .select("id")
-      .match({ user_id: userId, recipe_id: recipeId })
-      .single();
-    if (selErr && selErr.code !== "PGRST116") throw selErr;
-    if (existing && existing.id) {
-      const { data, error: updErr } = await supabase
+    try {
+      const { data: existing, error: selErr } = await supabase
         .from("ratings")
-        .update({ rating })
-        .eq("id", existing.id)
-        .select()
+        .select("id")
+        .match({ user_id: userId, recipe_id: recipeId })
         .single();
-      if (updErr) throw updErr;
-      return data;
-    } else {
-      const { data, error: insErr } = await supabase
-        .from("ratings")
-        .insert(payload)
-        .select()
-        .single();
-      if (insErr) throw insErr;
-      return data;
+      if (selErr && selErr.code !== "PGRST116") throw selErr;
+      if (existing && existing.id) {
+        const { data, error: updErr } = await supabase
+          .from("ratings")
+          .update({ rating })
+          .eq("id", existing.id)
+          .select()
+          .single();
+        if (updErr) throw updErr;
+        return { success: true, data };
+      } else {
+        const { data, error: insErr } = await supabase
+          .from("ratings")
+          .insert(payload)
+          .select()
+          .single();
+        if (insErr) throw insErr;
+        return { success: true, data };
+      }
+    } catch (finalErr) {
+      return { success: false, error: finalErr };
     }
   }
 };
 
-export const getRecipeRatingStats = async (recipeId) => {
+export const getRecipeRatingStats = async ({ recipeId }) => {
   if (!recipeId) return { avg: null, count: 0 };
   const { data, error } = await supabase
     .from("ratings")
     .select("rating")
     .eq("recipe_id", recipeId);
-  if (error) throw error;
+  if (error) {
+    console.error("getRecipeRatingStats error:", error);
+    return { avg: null, count: 0 };
+  }
   const arr = data || [];
   const count = arr.length;
   const avg = count
