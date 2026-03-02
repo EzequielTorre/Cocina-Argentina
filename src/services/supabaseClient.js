@@ -279,3 +279,32 @@ export const getRecipeRatingStats = async (recipeId) => {
     : null;
   return { avg, count };
 };
+
+/**
+ * Asegura que una lista de recetas exista en la base de datos (upsert)
+ * Útil para sincronizar datos locales con remotos
+ */
+export const ensureRecipes = async (recipes) => {
+  if (!Array.isArray(recipes) || recipes.length === 0) return;
+
+  const formatted = recipes.map((r) => {
+    const payload = { ...r };
+    // Limpiar campos que no deben ir al upsert si es necesario
+    // o asegurar que ingredientes/instrucciones sean strings si vienen como arrays
+    if (Array.isArray(payload.ingredients))
+      payload.ingredients = payload.ingredients.join("\n");
+    if (Array.isArray(payload.instructions))
+      payload.instructions = payload.instructions.join("\n");
+    return payload;
+  });
+
+  const { error } = await supabase.from("recipes").upsert(formatted, {
+    onConflict: "id",
+  });
+
+  if (error) {
+    console.error("ensureRecipes error:", error);
+    throw error;
+  }
+  return true;
+};
