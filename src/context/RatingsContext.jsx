@@ -54,7 +54,11 @@ export const RatingsProvider = ({ children }) => {
         });
         setRemoteStats((prev) => ({
           ...prev,
-          [idNum]: stats,
+          [idNum]: {
+            average: stats.avg || 0,
+            count: stats.count || 0,
+            userRating: rating,
+          },
         }));
       }
     }

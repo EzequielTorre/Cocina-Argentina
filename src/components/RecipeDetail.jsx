@@ -166,7 +166,7 @@ const RecipeDetail = () => {
                 size="lg"
               />
               <p className="small text-secondary mt-2 mb-0">
-                Promedio: {ratingStats.average.toFixed(1)} ★ ·{" "}
+                Promedio: {Number(ratingStats.average || 0).toFixed(1)} ★ ·{" "}
                 {ratingStats.count} voto{ratingStats.count === 1 ? "" : "s"}
               </p>
             </div>

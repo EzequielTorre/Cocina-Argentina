@@ -68,7 +68,9 @@ const StarRating = ({
         </button>
       ))}
       {rating > 0 && (
-        <span className="text-muted ms-2 small">{rating.toFixed(1)} / 5</span>
+        <span className="text-muted ms-2 small">
+          {Number(rating || 0).toFixed(1)} / 5
+        </span>
       )}
     </div>
   );
