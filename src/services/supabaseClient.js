@@ -223,7 +223,7 @@ export const toggleFavoriteRemote = async ({ userId, recipeId }) => {
 
 export const upsertRating = async ({ userId, recipeId, rating }) => {
   if (!userId || !recipeId) throw new Error("userId and recipeId required");
-  const payload = { user_id: userId, recipe_id: recipeId, rating };
+  const payload = { user_id: userId, recipe_id: recipeId, value: rating };
   // Intentar upsert (requiere constraint unique on (user_id, recipe_id))
   try {
     const { data, error } = await supabase
@@ -248,7 +248,7 @@ export const upsertRating = async ({ userId, recipeId, rating }) => {
       if (existing && existing.id) {
         const { data, error: updErr } = await supabase
           .from("ratings")
-          .update({ rating })
+          .update({ value: rating })
           .eq("id", existing.id)
           .select()
           .single();
@@ -273,7 +273,7 @@ export const getRecipeRatingStats = async ({ recipeId }) => {
   if (!recipeId) return { avg: null, count: 0 };
   const { data, error } = await supabase
     .from("ratings")
-    .select("rating")
+    .select("value")
     .eq("recipe_id", recipeId);
   if (error) {
     console.error("getRecipeRatingStats error:", error);
@@ -282,7 +282,7 @@ export const getRecipeRatingStats = async ({ recipeId }) => {
   const arr = data || [];
   const count = arr.length;
   const avg = count
-    ? arr.reduce((s, r) => s + Number(r.rating || 0), 0) / count
+    ? arr.reduce((s, r) => s + Number(r.value || 0), 0) / count
     : null;
   return { avg, count };
 };
