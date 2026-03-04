@@ -13,6 +13,8 @@ import { useRecipes } from "../context/RecipeContext";
 import StarRating from "./StarRating";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import ErrorAlert from "./ui/ErrorAlert";
+import RecipeComments from "./RecipeComments";
+import RecipeCard from "./RecipeCard";
 import {
   Container,
   Row,
@@ -25,8 +27,9 @@ import {
 
 const RecipeDetail = () => {
   const { id } = useParams();
-  const { getRecipeById } = useRecipes();
+  const { getRecipeById, recipes } = useRecipes();
   const [recipe, setRecipe] = useState(null);
+  const [relatedRecipes, setRelatedRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { getRating, setRating, getRatingStats } = useRatings();
@@ -76,6 +79,15 @@ const RecipeDetail = () => {
         setLoading(true);
         const data = await getRecipeById(id);
         setRecipe(data);
+
+        // Buscar recetas relacionadas por categoría
+        if (data && recipes.length > 0) {
+          const related = recipes
+            .filter((r) => r.category === data.category && r.id !== data.id)
+            .sort(() => 0.5 - Math.random()) // Mezclar aleatoriamente
+            .slice(0, 3); // Tomar solo 3
+          setRelatedRecipes(related);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -86,7 +98,7 @@ const RecipeDetail = () => {
     if (id) {
       fetchRecipe();
     }
-  }, [id, getRecipeById]);
+  }, [id, getRecipeById, recipes]);
 
   const rating = recipe ? getRating(recipe.id) : 0;
   const ratingStats = recipe
@@ -144,8 +156,12 @@ const RecipeDetail = () => {
           </div>
 
           {/* Info del Autor */}
-          {(recipe.author_name || recipe.author_image) && (
-            <div className="mt-3 d-flex align-items-center gap-3 p-3 bg-light rounded shadow-sm border">
+          {recipe.user_id && (recipe.author_name || recipe.author_image) && (
+            <Link
+              to={`/perfil/${recipe.user_id}`}
+              className="mt-3 d-flex align-items-center gap-3 p-3 bg-light rounded shadow-sm border text-decoration-none transition-hover"
+              title={`Ver perfil de ${recipe.author_name}`}
+            >
               {recipe.author_image ? (
                 <img
                   src={recipe.author_image}
@@ -163,9 +179,11 @@ const RecipeDetail = () => {
               )}
               <div>
                 <p className="mb-0 text-muted small">Receta subida por</p>
-                <p className="mb-0 fw-bold text-dark">{recipe.author_name || "Cocinero Argentino"}</p>
+                <p className="mb-0 fw-bold text-dark">
+                  {recipe.author_name || "Cocinero Argentino"}
+                </p>
               </div>
-            </div>
+            </Link>
           )}
         </Col>
 
@@ -319,6 +337,24 @@ const RecipeDetail = () => {
           </Col>
         </Row>
       </Card>
+      {/* Sección de Comentarios */}
+      <RecipeComments recipeId={recipe.id} />
+
+      {/* Recetas Relacionadas */}
+      {relatedRecipes.length > 0 && (
+        <div className="mt-5 pt-5 border-top">
+          <h3 className="mb-4 d-flex align-items-center gap-2">
+            <FaUtensils className="text-primary" /> También te podría gustar...
+          </h3>
+          <Row xs={1} md={3} className="g-4">
+            {relatedRecipes.map((related) => (
+              <Col key={related.id}>
+                <RecipeCard recipe={related} />
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
     </Container>
   );
 };

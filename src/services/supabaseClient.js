@@ -317,3 +317,65 @@ export const ensureRecipes = async (recipes) => {
   }
   return true;
 };
+
+// --- COMENTARIOS ---
+
+export const getComments = async (recipeId) => {
+  if (!recipeId) return [];
+  const { data, error } = await supabase
+    .from("comments")
+    .select("*")
+    .eq("recipe_id", recipeId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getComments error:", error);
+    return [];
+  }
+  return data || [];
+};
+
+export const addComment = async ({
+  recipeId,
+  userId,
+  userName,
+  userImage,
+  content,
+}) => {
+  if (!recipeId || !userId || !content) {
+    throw new Error("recipeId, userId and content are required");
+  }
+
+  const { data, error } = await supabase
+    .from("comments")
+    .insert({
+      recipe_id: recipeId,
+      user_id: userId,
+      user_name: userName,
+      user_image: userImage,
+      content: content.trim(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("addComment error:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const deleteComment = async (commentId, userId) => {
+  if (!commentId || !userId) throw new Error("commentId and userId required");
+
+  const { error } = await supabase
+    .from("comments")
+    .delete()
+    .match({ id: commentId, user_id: userId });
+
+  if (error) {
+    console.error("deleteComment error:", error);
+    throw error;
+  }
+  return true;
+};

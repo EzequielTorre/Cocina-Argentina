@@ -10,6 +10,7 @@ import MyRecipes from "./components/MyRecipes";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import UserProfile from "./components/UserProfile";
 import "./App.css";
 
 function App() {
@@ -70,6 +71,19 @@ function App() {
                 <>
                   <SignedIn>
                     <RecipeDetail />
+                  </SignedIn>
+                  <SignedOut>
+                    <RedirectToSignIn />
+                  </SignedOut>
+                </>
+              }
+            />
+            <Route
+              path="/perfil/:userId"
+              element={
+                <>
+                  <SignedIn>
+                    <UserProfile />
                   </SignedIn>
                   <SignedOut>
                     <RedirectToSignIn />

@@ -117,27 +117,38 @@ export function RecipeProvider({ children }) {
   };
 
   /**
-   * Busca recetas por término y categoría (en datos locales)
-   * Para búsquedas más eficientes, usar useSearchRecipes hook
+   * Busca recetas por término, categoría y dificultad
    * @param {string} searchTerm - Término a buscar
    * @param {string} category - Categoría a filtrar
+   * @param {string} difficulty - Dificultad a filtrar
    * @returns {Array} Array de recetas que coinciden con los criterios
    */
-  const searchRecipes = (searchTerm = "", category = "Todas") => {
+  const searchRecipes = (
+    searchTerm = "",
+    category = "Todas",
+    difficulty = "Todas",
+  ) => {
     const data = recipes && recipes.length > 0 ? recipes : recipesData;
 
     return data.filter((recipe) => {
       const title = recipe.title || "";
       const description = recipe.descriptions || recipe.description || "";
+      const ingredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients.join(" ")
+        : recipe.ingredients || "";
 
       const matchesSearch =
         title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        description.toLowerCase().includes(searchTerm.toLowerCase());
+        description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ingredients.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesCategory =
         category === "Todas" || recipe.category === category;
 
-      return matchesSearch && matchesCategory;
+      const matchesDifficulty =
+        difficulty === "Todas" || recipe.difficulty === difficulty;
+
+      return matchesSearch && matchesCategory && matchesDifficulty;
     });
   };
 
