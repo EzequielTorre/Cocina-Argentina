@@ -57,9 +57,9 @@ src/
 Para ejecutar este proyecto localmente, necesitas configurar las siguientes variables en un archivo `.env`:
 
 ```env
-VITE_CLERK_PUBLISHABLE_KEY=tu_key_de_clerk
-VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_ANON_KEY=tu_key_anonima_de_supabase
+VITE_CLERK_PUBLISHABLE_KEY=key_de_clerk
+VITE_SUPABASE_URL=url_de_supabase
+VITE_SUPABASE_ANON_KEY=key_anonima_de_supabase
 ```
 
 ## � Instalación
@@ -70,5 +70,5 @@ VITE_SUPABASE_ANON_KEY=tu_key_anonima_de_supabase
 
 ---
 
-� **Contacto**: [tu-email@ejemplo.com]
+� **Contacto**: ezequiel.torres0682@gmail.com
 🎓 **Estudiante de programación de la academia Talento Tech**
