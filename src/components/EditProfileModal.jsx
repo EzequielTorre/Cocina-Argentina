@@ -13,6 +13,9 @@ const EditProfileModal = ({ show, onHide, user, currentProfile, onUpdate }) => {
       currentProfile?.contact_email ||
       user?.primaryEmailAddress?.emailAddress ||
       "",
+    twitter_url: currentProfile?.twitter_url || "",
+    instagram_url: currentProfile?.instagram_url || "",
+    facebook_url: currentProfile?.facebook_url || "",
   });
 
   const handleChange = (e) => {
@@ -116,6 +119,53 @@ const EditProfileModal = ({ show, onHide, user, currentProfile, onUpdate }) => {
               style={{ resize: "none" }}
             />
           </Form.Group>
+
+          <hr />
+          <h5 className="mb-3 text-primary">Redes Sociales</h5>
+          <Row>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold">
+                  Instagram (URL)
+                </Form.Label>
+                <Form.Control
+                  type="url"
+                  name="instagram_url"
+                  value={formData.instagram_url}
+                  onChange={handleChange}
+                  placeholder="https://instagram.com/usuario"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold">
+                  X / Twitter (URL)
+                </Form.Label>
+                <Form.Control
+                  type="url"
+                  name="twitter_url"
+                  value={formData.twitter_url}
+                  onChange={handleChange}
+                  placeholder="https://x.com/usuario"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small fw-bold">
+                  Facebook (URL)
+                </Form.Label>
+                <Form.Control
+                  type="url"
+                  name="facebook_url"
+                  value={formData.facebook_url}
+                  onChange={handleChange}
+                  placeholder="https://facebook.com/usuario"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide} disabled={loading}>

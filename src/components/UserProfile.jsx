@@ -23,6 +23,9 @@ import {
   FaEdit,
   FaBriefcase,
   FaEnvelope,
+  FaInstagram,
+  FaTwitter,
+  FaFacebook,
 } from "react-icons/fa";
 
 const UserProfile = () => {
@@ -139,12 +142,61 @@ const UserProfile = () => {
                   </span>
                 )}
                 {profile?.contact_email && (
-                  <span className="text-muted d-flex align-items-center gap-2">
+                  <a
+                    href={`mailto:${profile.contact_email}`}
+                    className="text-muted d-flex align-items-center gap-2 text-decoration-none hover-primary"
+                    title={`Enviar correo a ${profile.contact_email}`}
+                  >
                     <FaEnvelope className="text-primary" />{" "}
                     {profile.contact_email}
-                  </span>
+                  </a>
                 )}
               </Stack>
+
+              {/* Redes Sociales */}
+              {(profile?.instagram_url ||
+                profile?.twitter_url ||
+                profile?.facebook_url) && (
+                <Stack
+                  direction="horizontal"
+                  gap={3}
+                  className="justify-content-center justify-content-md-start mt-2"
+                >
+                  {profile.instagram_url && (
+                    <a
+                      href={profile.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-danger fs-4"
+                      title="Instagram"
+                    >
+                      <FaInstagram />
+                    </a>
+                  )}
+                  {profile.twitter_url && (
+                    <a
+                      href={profile.twitter_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-dark fs-4"
+                      title="X (Twitter)"
+                    >
+                      <FaTwitter />
+                    </a>
+                  )}
+                  {profile.facebook_url && (
+                    <a
+                      href={profile.facebook_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary fs-4"
+                      title="Facebook"
+                    >
+                      <FaFacebook />
+                    </a>
+                  )}
+                </Stack>
+              )}
             </div>
           </div>
 
