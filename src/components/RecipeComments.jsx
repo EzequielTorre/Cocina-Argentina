@@ -109,10 +109,13 @@ const RecipeComments = ({ recipeId }) => {
                 <Image
                   src={user.imageUrl}
                   roundedCircle
-                  width={40}
-                  height={40}
-                  className="border"
-                  style={{ objectFit: "cover" }}
+                  style={{
+                    width: "45px",
+                    height: "45px",
+                    objectFit: "cover",
+                    aspectRatio: "1/1",
+                  }}
+                  className="border flex-shrink-0"
                 />
                 <div className="flex-grow-1">
                   <Form.Control
@@ -159,10 +162,13 @@ const RecipeComments = ({ recipeId }) => {
               <Image
                 src={comment.user_image || "https://via.placeholder.com/40"}
                 roundedCircle
-                width={45}
-                height={45}
+                style={{
+                  width: "45px",
+                  height: "45px",
+                  objectFit: "cover",
+                  aspectRatio: "1/1",
+                }}
                 className="border shadow-sm flex-shrink-0"
-                style={{ objectFit: "cover" }}
               />
               <div className="flex-grow-1">
                 <div className="bg-white p-3 rounded-4 shadow-sm border">
