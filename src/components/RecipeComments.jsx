@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
 import {
   getComments,
   addComment,
@@ -173,9 +174,14 @@ const RecipeComments = ({ recipeId }) => {
               <div className="flex-grow-1">
                 <div className="bg-white p-3 rounded-4 shadow-sm border">
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="fw-bold text-dark">
-                      {comment.user_name}
-                    </span>
+                    <Link
+                      to={`/perfil/${comment.user_id}`}
+                      className="text-decoration-none"
+                    >
+                      <span className="fw-bold text-dark hover-primary">
+                        {comment.user_name}
+                      </span>
+                    </Link>
                     <span className="text-muted small">
                       {new Date(comment.created_at).toLocaleDateString()}
                     </span>

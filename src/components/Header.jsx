@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
-import { FaFire, FaSun, FaMoon, FaHeart, FaPlus } from "react-icons/fa";
+import { FaFire, FaSun, FaMoon, FaHeart, FaPlus, FaUser } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/clerk-react";
 
 const Header = () => {
+  const { user } = useUser();
   const location = useLocation();
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem("theme");
@@ -94,6 +95,16 @@ const Header = () => {
               >
                 <FaPlus /> Mis recetas
               </Nav.Link>
+              {user && (
+                <Nav.Link
+                  as={Link}
+                  to={`/perfil/${user.id}`}
+                  active={location.pathname === `/perfil/${user.id}`}
+                  className="d-flex align-items-center gap-1"
+                >
+                  <FaUser /> Mi Perfil
+                </Nav.Link>
+              )}
             </SignedIn>
           </Nav>
 
