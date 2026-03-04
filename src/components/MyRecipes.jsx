@@ -71,6 +71,8 @@ export default function MyRecipes() {
         ingredients: formData.ingredients, // El servicio se encarga de normalizarlo
         instructions: formData.instructions, // El servicio se encarga de normalizarlo
         servings: parseInt(formData.servings) || null,
+        author_name: user.fullName || user.username || "Usuario de Cocina Argentina",
+        author_image: user.imageUrl,
       };
 
       const newRecipe = await createRecipe(recipeData, { userId: user.id });

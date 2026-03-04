@@ -88,6 +88,8 @@ const normalizeRecipe = (row = {}) => {
     created_at: row.created_at,
     updated_at: row.updated_at,
     user_id: row.user_id ?? null,
+    author_name: row.author_name || null,
+    author_image: row.author_image || null,
   };
 };
 

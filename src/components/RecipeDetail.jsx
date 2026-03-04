@@ -142,6 +142,31 @@ const RecipeDetail = () => {
               style={{ objectFit: "cover" }}
             />
           </div>
+
+          {/* Info del Autor */}
+          {(recipe.author_name || recipe.author_image) && (
+            <div className="mt-3 d-flex align-items-center gap-3 p-3 bg-light rounded shadow-sm border">
+              {recipe.author_image ? (
+                <img
+                  src={recipe.author_image}
+                  alt={recipe.author_name}
+                  className="rounded-circle border"
+                  style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                />
+              ) : (
+                <div
+                  className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                  style={{ width: "50px", height: "50px" }}
+                >
+                  {recipe.author_name?.charAt(0).toUpperCase() || "U"}
+                </div>
+              )}
+              <div>
+                <p className="mb-0 text-muted small">Receta subida por</p>
+                <p className="mb-0 fw-bold text-dark">{recipe.author_name || "Cocinero Argentino"}</p>
+              </div>
+            </div>
+          )}
         </Col>
 
         <Col md={6}>
