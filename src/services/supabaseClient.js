@@ -379,3 +379,36 @@ export const deleteComment = async (commentId, userId) => {
   }
   return true;
 };
+
+// --- PERFILES DE USUARIO ---
+
+export const getUserProfile = async (userId) => {
+  if (!userId) return null;
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("getUserProfile error:", error);
+    return null;
+  }
+  return data;
+};
+
+export const upsertUserProfile = async (profileData) => {
+  if (!profileData.user_id) throw new Error("user_id is required");
+
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .upsert(profileData, { onConflict: "user_id" })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("upsertUserProfile error:", error);
+    throw error;
+  }
+  return data;
+};
