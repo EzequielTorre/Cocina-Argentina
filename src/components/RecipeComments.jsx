@@ -112,6 +112,7 @@ const RecipeComments = ({ recipeId }) => {
                   width={40}
                   height={40}
                   className="border"
+                  style={{ objectFit: "cover" }}
                 />
                 <div className="flex-grow-1">
                   <Form.Control
@@ -161,6 +162,7 @@ const RecipeComments = ({ recipeId }) => {
                 width={45}
                 height={45}
                 className="border shadow-sm flex-shrink-0"
+                style={{ objectFit: "cover" }}
               />
               <div className="flex-grow-1">
                 <div className="bg-white p-3 rounded-4 shadow-sm border">
