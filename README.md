@@ -1,68 +1,67 @@
-# 🍲 Cocina Argentina - Plataforma de Comunidad Gastronómica
+# 🍲 Cocina Argentina - Plataforma de Comunidad Gastronómica Premium
 
-> Una aplicación web profesional y social para explorar, crear y compartir el sabor de la cocina tradicional argentina. Desarrollada con un stack moderno enfocado en la comunidad, la persistencia de datos y una experiencia de usuario (UX) de alto nivel.
+> Una experiencia web social y profesional diseñada para explorar, crear y compartir el legado culinario argentino. Desarrollada con un stack de última generación enfocado en la interacción en tiempo real y la gestión avanzada de medios.
 
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev)
-[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?logo=supabase)](https://supabase.com)
+[![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Storage-3ECF8E?logo=supabase)](https://supabase.com)
 [![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?logo=clerk)](https://clerk.com)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)](https://vitejs.dev)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap)](https://getbootstrap.com)
 
 ## 🚀 Características Principales
 
-### �🇷 Contenido y Comunidad
+### ��🇷 Comunidad y Red Social
 
-- **Recetario Completo**: Colección de platos tradicionales con ingredientes, instrucciones detalladas y tiempos.
-- **Creación de Recetas**: Los usuarios logueados pueden subir sus propias recetas con imágenes personalizadas.
-- **Atribución de Autor**: Cada receta muestra quién la subió, con enlace directo a su perfil.
-- **Comunidad Social**: Sistema de comentarios y opiniones en tiempo real para interactuar con otros cocineros.
-- **Perfiles Públicos**: Páginas de perfil personalizables con biografía, ocupación, redes sociales (Instagram, X, Facebook) y lista de recetas publicadas.
+- **Perfiles Premium**: Páginas de perfil rediseñadas con banner hero, biografía, ocupación, medallas de logros y enlaces a redes sociales (Instagram, X, Facebook).
+- **Interacción en Tiempo Real**: Sistema de notificaciones mediante WebSockets que alerta instantáneamente sobre nuevos comentarios y calificaciones.
+- **Comunidad Gastronómica**: Sistema de comentarios dinámico con atribución de autor y enlaces directos entre perfiles.
+- **Atribución Dinámica**: Cada receta está vinculada a su creador, fomentando el reconocimiento entre cocineros.
 
-### 🛠️ Herramientas para el Cocinero
+### 🛠️ Herramientas Avanzadas
 
-- **Modo Cocina**: Interfaz optimizada con letra grande y prevención de bloqueo de pantalla (Wake Lock API) para seguir instrucciones sin tocar el móvil con las manos sucias.
-- **Conversor de Unidades**: Cambia instantáneamente entre sistema métrico e imperial (gramos/ml a onzas).
-- **Maridaje con Mate**: Sugerencias inteligentes de acompañamiento con mate según el tipo de receta (dulce o salada).
-- **Buscador Avanzado**: Filtros por nombre, ingredientes, categoría y nivel de dificultad.
+- **Supabase Storage**: Gestión real de archivos multimedia. Los usuarios pueden subir sus propias fotos de recetas y avatares directamente a la nube.
+- **Modo Cocina Pro**: Interfaz optimizada con prevención de bloqueo de pantalla (Wake Lock API) para seguir instrucciones sin interrupciones.
+- **Buscador Inteligente**: Filtros avanzados por ingredientes, categorías y niveles de dificultad con contador dinámico de resultados.
+- **Home Dinámica**: Secciones inteligentes de "Receta del Día", "Mejores Postres" y "Últimas Incorporaciones".
 
-### 💾 Persistencia y Seguridad
+### 💾 Ingeniería y Persistencia
 
-- **Sincronización con Supabase**: Favoritos, calificaciones (estrellas) y comentarios persistentes en la nube.
-- **Autenticación con Clerk**: Registro e inicio de sesión seguro, gestión de perfiles y avatares.
-- **Favoritos**: Guarda tus recetas preferidas para acceder a ellas rápidamente desde cualquier dispositivo.
+- **Sincronización Cloud**: Persistencia total de favoritos, calificaciones y comentarios mediante Supabase.
+- **Arquitectura de Estado**: Uso intensivo de React Context API para una gestión fluida de notificaciones, recetas y autenticación.
+- **Seguridad RLS**: Políticas de Row Level Security configuradas para proteger los datos y archivos de cada usuario.
 
 ## 🛠️ Stack Tecnológico
 
-- **Frontend**: React 19, Vite, React Router v6, Bootstrap 5, React Icons.
-- **Backend as a Service (BaaS)**: Supabase (PostgreSQL, RLS).
-- **Autenticación**: Clerk (User Management).
-- **Estado Global**: React Context API (Recipes, Favorites, Ratings).
-- **APIs**: Wake Lock API (Modo Cocina).
+- **Frontend**: React 19, Vite, React Router v6, Bootstrap 5 (Custom CSS), React Icons.
+- **BaaS (Backend as a Service)**:
+  - **Supabase**: Base de datos PostgreSQL, Realtime (WebSockets) y Storage (Buckets).
+- **Autenticación**: Clerk (Gestión de usuarios y sesiones).
+- **APIs Modernas**: Web Wake Lock API, Fetch API, URL Object API.
 
 ## 📂 Estructura del Proyecto
 
 ```text
 src/
-├── components/          # Componentes de la interfaz (Cards, Detail, List, etc.)
-│   ├── ui/              # Componentes reutilizables (Skeletons, Spinners, Alerts)
-│   └── data/            # Fallback de datos locales (recipes.json)
-├── context/             # Gestión de estado global (Auth, Recipes, Favorites)
-├── services/            # Cliente de Supabase y lógica de API
-├── App.jsx              # Enrutamiento principal
-└── main.jsx             # Punto de entrada y configuración de Clerk
+├── components/          # Interfaz de usuario (Home, Perfiles, Notificaciones)
+│   ├── ui/              # Componentes atómicos (Skeletons, Spinners, Alerts)
+│   └── data/            # Fallback de datos locales
+├── context/             # Lógica global (Notifications, Recipes, Favorites, Ratings)
+├── services/            # Cliente Supabase y lógica de subida de medios
+├── App.jsx              # Enrutamiento y layouts
+└── main.jsx             # Inyección de Providers globales
 ```
 
 ## ⚙️ Configuración del Entorno
 
-Para ejecutar este proyecto localmente, necesitas configurar las siguientes variables en un archivo `.env`:
+Requiere un archivo `.env` con las siguientes claves:
 
 ```env
-VITE_CLERK_PUBLISHABLE_KEY=key_de_clerk
-VITE_SUPABASE_URL=url_de_supabase
-VITE_SUPABASE_ANON_KEY=key_anonima_de_supabase
+VITE_CLERK_PUBLISHABLE_KEY=tu_key_de_clerk
+VITE_SUPABASE_URL=tu_url_de_supabase
+VITE_SUPABASE_ANON_KEY=tu_key_anonima_de_supabase
 ```
 
-## � Instalación
+## 📖 Instalación
 
 1. Clona el repositorio: `git clone https://github.com/EzequielTorre/Cocina-Argentina.git`
 2. Instala las dependencias: `npm install`
@@ -70,5 +69,5 @@ VITE_SUPABASE_ANON_KEY=key_anonima_de_supabase
 
 ---
 
-� **Contacto**: ezequiel.torres0682@gmail.com
+📩 **Contacto**: ezequiel.torres0682@gmail.com
 🎓 **Estudiante de programación de la academia Talento Tech**
