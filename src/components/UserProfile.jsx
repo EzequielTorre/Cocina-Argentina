@@ -26,6 +26,8 @@ import {
   FaInstagram,
   FaTwitter,
   FaFacebook,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
 } from "react-icons/fa";
 
 const UserProfile = () => {
@@ -80,154 +82,227 @@ const UserProfile = () => {
     profile?.avatar_url || userRecipes[0]?.author_image || "";
 
   return (
-    <Container className="py-5">
-      <Link
-        to="/recetas"
-        className="btn btn-link text-decoration-none mb-4 d-inline-flex align-items-center gap-2"
+    <div className="bg-light min-vh-100">
+      {/* Banner / Hero Section */}
+      <div
+        className="position-relative"
+        style={{
+          height: "250px",
+          background: "linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%)",
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
-        <FaArrowLeft /> Volver al recetario
-      </Link>
-
-      <Card className="shadow-sm border-0 mb-5 bg-white overflow-hidden rounded-4">
-        <div className="bg-primary py-4"></div>
-        <Card.Body className="px-4 pb-4 position-relative">
-          {isOwner && (
-            <Button
-              variant="outline-primary"
-              className="position-absolute top-0 end-0 mt-3 me-3 d-flex align-items-center gap-2 rounded-pill"
-              onClick={() => setShowEditModal(true)}
-            >
-              <FaEdit /> Editar Perfil
-            </Button>
-          )}
-
-          <div
-            className="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-4"
-            style={{ marginTop: "-50px" }}
+        <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+        <Container className="h-100 position-relative">
+          <Link
+            to="/recetas"
+            className="btn btn-link text-white text-decoration-none position-absolute top-0 start-0 mt-4 d-flex align-items-center gap-2 hover-opacity"
           >
-            {displayAvatar ? (
-              <Image
-                src={displayAvatar}
-                roundedCircle
-                className="border border-4 border-white shadow"
-                style={{
-                  width: "130px",
-                  height: "130px",
-                  objectFit: "cover",
-                  aspectRatio: "1/1",
-                }}
-              />
-            ) : (
-              <div
-                className="rounded-circle bg-secondary border border-4 border-white shadow d-flex align-items-center justify-content-center text-white"
-                style={{ width: "130px", height: "130px", fontSize: "3.5rem" }}
-              >
-                <FaUser />
-              </div>
-            )}
-            <div className="text-center text-md-start mb-2 flex-grow-1">
-              <h1 className="fw-bold mb-1">{displayName}</h1>
-              <Stack
-                direction="horizontal"
-                gap={3}
-                className="justify-content-center justify-content-md-start flex-wrap mb-2"
-              >
-                <Badge bg="info" className="text-uppercase px-3 py-2">
-                  Cocinero de la Comunidad
-                </Badge>
-                {profile?.occupation && (
-                  <span className="text-muted d-flex align-items-center gap-2">
-                    <FaBriefcase className="text-primary" />{" "}
-                    {profile.occupation}
-                  </span>
-                )}
-                {profile?.contact_email && (
-                  <a
-                    href={`mailto:${profile.contact_email}`}
-                    className="text-muted d-flex align-items-center gap-2 text-decoration-none hover-primary"
-                    title={`Enviar correo a ${profile.contact_email}`}
+            <FaArrowLeft /> Volver al recetario
+          </Link>
+        </Container>
+      </div>
+
+      <Container
+        style={{ marginTop: "-100px" }}
+        className="pb-5 position-relative z-2"
+      >
+        <Row className="g-4">
+          {/* Columna Izquierda: Perfil */}
+          <Col lg={4}>
+            <Card
+              className="shadow-lg border-0 rounded-4 overflow-hidden sticky-top"
+              style={{ top: "100px" }}
+            >
+              <Card.Body className="p-4 text-center">
+                <div className="mb-4 position-relative d-inline-block">
+                  {displayAvatar ? (
+                    <Image
+                      src={displayAvatar}
+                      roundedCircle
+                      className="border border-5 border-white shadow-sm"
+                      style={{
+                        width: "160px",
+                        height: "160px",
+                        objectFit: "cover",
+                        aspectRatio: "1/1",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="rounded-circle bg-secondary border border-5 border-white shadow-sm d-flex align-items-center justify-content-center text-white mx-auto"
+                      style={{
+                        width: "160px",
+                        height: "160px",
+                        fontSize: "4rem",
+                      }}
+                    >
+                      <FaUser />
+                    </div>
+                  )}
+                  {isOwner && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="position-absolute bottom-0 end-0 rounded-circle p-2 shadow"
+                      onClick={() => setShowEditModal(true)}
+                      title="Editar foto"
+                    >
+                      <FaEdit />
+                    </Button>
+                  )}
+                </div>
+
+                <h2 className="fw-bold mb-1">{displayName}</h2>
+                <p className="text-muted mb-3 d-flex align-items-center justify-content-center gap-2">
+                  <FaBriefcase className="text-info" />{" "}
+                  {profile?.occupation || "Cocinero Apasionado"}
+                </p>
+
+                <div className="d-flex justify-content-center gap-2 mb-4">
+                  <Badge bg="info" className="px-3 py-2 rounded-pill">
+                    {userRecipes.length} Recetas
+                  </Badge>
+                  <Badge
+                    bg="warning"
+                    className="text-dark px-3 py-2 rounded-pill"
                   >
-                    <FaEnvelope className="text-primary" />{" "}
-                    {profile.contact_email}
-                  </a>
+                    Chef Nivel 1
+                  </Badge>
+                </div>
+
+                {profile?.bio && (
+                  <div className="bg-light p-3 rounded-3 mb-4 text-start">
+                    <p
+                      className="mb-0 text-secondary small"
+                      style={{ fontStyle: "italic" }}
+                    >
+                      "{profile.bio}"
+                    </p>
+                  </div>
                 )}
-              </Stack>
 
-              {/* Redes Sociales */}
-              {(profile?.instagram_url ||
-                profile?.twitter_url ||
-                profile?.facebook_url) && (
-                <Stack
-                  direction="horizontal"
-                  gap={3}
-                  className="justify-content-center justify-content-md-start mt-2"
-                >
-                  {profile.instagram_url && (
-                    <a
-                      href={profile.instagram_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-danger fs-4"
-                      title="Instagram"
+                <div className="d-grid gap-2 mb-4">
+                  {profile?.contact_email && (
+                    <Button
+                      href={`mailto:${profile.contact_email}`}
+                      variant="outline-primary"
+                      className="rounded-pill d-flex align-items-center justify-content-center gap-2"
                     >
-                      <FaInstagram />
-                    </a>
+                      <FaEnvelope /> Contactar
+                    </Button>
                   )}
-                  {profile.twitter_url && (
-                    <a
-                      href={profile.twitter_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-dark fs-4"
-                      title="X (Twitter)"
+                  {isOwner && (
+                    <Button
+                      variant="primary"
+                      className="rounded-pill d-flex align-items-center justify-content-center gap-2"
+                      onClick={() => setShowEditModal(true)}
                     >
-                      <FaTwitter />
-                    </a>
+                      <FaEdit /> Editar Perfil Completo
+                    </Button>
                   )}
-                  {profile.facebook_url && (
-                    <a
-                      href={profile.facebook_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary fs-4"
-                      title="Facebook"
+                </div>
+
+                {/* Redes Sociales */}
+                {(profile?.instagram_url ||
+                  profile?.twitter_url ||
+                  profile?.facebook_url) && (
+                  <div className="pt-3 border-top">
+                    <h6 className="text-uppercase small fw-bold text-muted mb-3">
+                      Redes Sociales
+                    </h6>
+                    <Stack
+                      direction="horizontal"
+                      gap={3}
+                      className="justify-content-center"
                     >
-                      <FaFacebook />
-                    </a>
-                  )}
-                </Stack>
-              )}
+                      {profile.instagram_url && (
+                        <a
+                          href={profile.instagram_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-danger fs-4 transition-hover"
+                        >
+                          <FaInstagram />
+                        </a>
+                      )}
+                      {profile.twitter_url && (
+                        <a
+                          href={profile.twitter_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-dark fs-4 transition-hover"
+                        >
+                          <FaTwitter />
+                        </a>
+                      )}
+                      {profile.facebook_url && (
+                        <a
+                          href={profile.facebook_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary fs-4 transition-hover"
+                        >
+                          <FaFacebook />
+                        </a>
+                      )}
+                    </Stack>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Columna Derecha: Recetas */}
+          <Col lg={8}>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h3 className="fw-bold mb-0 d-flex align-items-center gap-2">
+                <FaUtensils className="text-primary" /> Recetas Publicadas
+              </h3>
+              <span className="text-muted small">
+                Mostrando {userRecipes.length} resultados
+              </span>
             </div>
-          </div>
 
-          {profile?.bio && (
-            <div className="mt-4 p-3 bg-light rounded-3 border-start border-primary border-4">
-              <p className="mb-0 text-secondary italic">"{profile.bio}"</p>
-            </div>
-          )}
-        </Card.Body>
-      </Card>
-
-      <h3 className="mb-4 d-flex align-items-center gap-2">
-        <FaUtensils className="text-primary" /> Recetas publicadas (
-        {userRecipes.length})
-      </h3>
-
-      {userRecipes.length > 0 ? (
-        <Row xs={1} md={2} lg={3} className="g-4">
-          {userRecipes.map((recipe) => (
-            <Col key={recipe.id}>
-              <RecipeCard recipe={recipe} />
-            </Col>
-          ))}
+            {userRecipes.length > 0 ? (
+              <Row xs={1} md={2} className="g-4">
+                {userRecipes.map((recipe) => (
+                  <Col key={recipe.id}>
+                    <RecipeCard recipe={recipe} />
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <Card className="text-center py-5 border-0 shadow-sm rounded-4 bg-white">
+                <Card.Body>
+                  <div className="text-muted mb-3">
+                    <FaUtensils size={48} className="opacity-25" />
+                  </div>
+                  <h4 className="text-muted">
+                    Este usuario aún no ha publicado recetas
+                  </h4>
+                  <p className="text-secondary mb-4">
+                    ¡Anímalo a compartir su primer plato!
+                  </p>
+                  {isOwner && (
+                    <Button
+                      as={Link}
+                      to="/mis-recetas"
+                      variant="primary"
+                      className="rounded-pill px-4"
+                    >
+                      Publicar mi primera receta
+                    </Button>
+                  )}
+                </Card.Body>
+              </Card>
+            )}
+          </Col>
         </Row>
-      ) : (
-        <div className="text-center py-5 bg-white rounded-4 shadow-sm border">
-          <p className="text-muted lead mb-0">
-            Este usuario aún no ha publicado recetas.
-          </p>
-        </div>
-      )}
+      </Container>
 
       {/* Modal de edición */}
       {isOwner && (
@@ -239,7 +314,7 @@ const UserProfile = () => {
           onUpdate={(updated) => setProfile(updated)}
         />
       )}
-    </Container>
+    </div>
   );
 };
 
