@@ -5,7 +5,9 @@ import {
   getComments,
   addComment,
   deleteComment,
+  createNotification,
 } from "../services/supabaseClient";
+import { useRecipes } from "../context/RecipeContext";
 import {
   Form,
   Button,
@@ -19,6 +21,7 @@ import { FaTrash, FaCommentAlt, FaPaperPlane } from "react-icons/fa";
 
 const RecipeComments = ({ recipeId }) => {
   const { user } = useUser();
+  const { getRecipeById } = useRecipes();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -62,6 +65,18 @@ const RecipeComments = ({ recipeId }) => {
       const added = await addComment(commentData);
       setComments([added, ...comments]);
       setNewComment("");
+
+      // Notificar al dueño de la receta
+      const recipe = await getRecipeById(recipeId);
+      if (recipe && recipe.user_id && recipe.user_id !== user.id) {
+        await createNotification({
+          userId: recipe.user_id,
+          type: "comment",
+          content: `${user.fullName || user.username} comentó en tu receta: "${recipe.title}"`,
+          recipeId: recipe.id,
+          fromUserName: user.fullName || user.username,
+        });
+      }
     } catch (err) {
       console.error("Error al añadir comentario:", err);
       setError(

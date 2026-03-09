@@ -443,3 +443,73 @@ export const uploadImage = async (file, bucket = "recipe-images") => {
     throw err;
   }
 };
+
+// --- NOTIFICACIONES ---
+
+export const getNotifications = async (userId) => {
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getNotifications error:", error);
+    return [];
+  }
+  return data || [];
+};
+
+export const markNotificationAsRead = async (notificationId) => {
+  if (!notificationId) return;
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", notificationId);
+
+  if (error) {
+    console.error("markNotificationAsRead error:", error);
+  }
+};
+
+export const createNotification = async ({
+  userId,
+  type,
+  content,
+  recipeId,
+  fromUserName,
+}) => {
+  if (!userId) return;
+  const { error } = await supabase.from("notifications").insert({
+    user_id: userId,
+    type,
+    content,
+    recipe_id: recipeId,
+    from_user_name: fromUserName,
+  });
+
+  if (error) {
+    console.error("createNotification error:", error);
+  }
+};
+
+export const subscribeToNotifications = (userId, onNewNotification) => {
+  if (!userId) return null;
+
+  return supabase
+    .channel(`notifications-${userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        onNewNotification(payload.new);
+      },
+    )
+    .subscribe();
+};

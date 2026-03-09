@@ -3,6 +3,7 @@ import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { FaFire, FaSun, FaMoon, FaHeart, FaPlus, FaUser } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/clerk-react";
+import NotificationBell from "./NotificationBell";
 
 const Header = () => {
   const { user } = useUser();
@@ -127,6 +128,7 @@ const Header = () => {
             </Button>
 
             <SignedIn>
+              <NotificationBell />
               <UserButton />
             </SignedIn>
             <SignedOut>

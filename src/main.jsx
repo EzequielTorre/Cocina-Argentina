@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/clerk-react";
 import { RecipeProvider } from "./context/RecipeContext.jsx";
 import { FavoritesProvider } from "./context/FavoritesContext.jsx";
 import { RatingsProvider } from "./context/RatingsContext.jsx";
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -22,11 +23,13 @@ createRoot(document.getElementById("root")).render(
     >
       {/* Providers envuelven a App */}
       <RecipeProvider>
-        <FavoritesProvider>
-          <RatingsProvider>
-            <App />
-          </RatingsProvider>
-        </FavoritesProvider>
+        <NotificationProvider>
+          <FavoritesProvider>
+            <RatingsProvider>
+              <App />
+            </RatingsProvider>
+          </FavoritesProvider>
+        </NotificationProvider>
       </RecipeProvider>
     </ClerkProvider>
   </StrictMode>,

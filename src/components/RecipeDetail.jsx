@@ -10,6 +10,8 @@ import {
 } from "react-icons/fa";
 import { useRatings } from "../context/RatingsContext";
 import { useRecipes } from "../context/RecipeContext";
+import { useUser } from "@clerk/clerk-react";
+import { createNotification } from "../services/supabaseClient";
 import StarRating from "./StarRating";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import ErrorAlert from "./ui/ErrorAlert";
@@ -27,14 +29,36 @@ import {
 
 const RecipeDetail = () => {
   const { id } = useParams();
+  const { user } = useUser();
   const { getRecipeById, recipes } = useRecipes();
   const [recipe, setRecipe] = useState(null);
   const [relatedRecipes, setRelatedRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { getRating, setRating, getRatingStats } = useRatings();
+  const {
+    getRating,
+    setRating: setRatingContext,
+    getRatingStats,
+  } = useRatings();
   const [cookingMode, setCookingMode] = useState(false);
   const [unitSystem, setUnitSystem] = useState("metric"); // 'metric' o 'imperial'
+
+  const handleRatingChange = async (newRating) => {
+    if (!user) return;
+
+    await setRatingContext(recipe.id, newRating);
+
+    // Notificar al dueño
+    if (recipe && recipe.user_id && recipe.user_id !== user.id) {
+      await createNotification({
+        userId: recipe.user_id,
+        type: "rating",
+        content: `${user.fullName || user.username} calificó tu receta "${recipe.title}" con ${newRating} estrellas`,
+        recipeId: recipe.id,
+        fromUserName: user.fullName || user.username,
+      });
+    }
+  };
 
   const toggleCookingMode = async () => {
     if (!cookingMode) {
@@ -204,7 +228,7 @@ const RecipeDetail = () => {
               </p>
               <StarRating
                 rating={rating}
-                onRatingChange={(newRating) => setRating(recipe.id, newRating)}
+                onRatingChange={handleRatingChange}
                 interactive={true}
                 size="lg"
               />
