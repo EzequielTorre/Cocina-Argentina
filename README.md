@@ -59,7 +59,19 @@ Requiere un archivo `.env` con las siguientes claves:
 VITE_CLERK_PUBLISHABLE_KEY=tu_key_de_clerk
 VITE_SUPABASE_URL=tu_url_de_supabase
 VITE_SUPABASE_ANON_KEY=tu_key_anonima_de_supabase
+VITE_EMAILJS_SERVICE_ID=tu_service_id_de_emailjs
+VITE_EMAILJS_TEMPLATE_ID=tu_template_id_de_emailjs
+VITE_EMAILJS_PUBLIC_KEY=tu_public_key_de_emailjs
 ```
+
+## 📧 Configuración de EmailJS
+
+Para recibir los mensajes del formulario de contacto y las alertas de actividad en tu correo personal:
+
+1. Crea una cuenta en [EmailJS](https://www.emailjs.com/).
+2. Conecta tu servicio de Gmail.
+3. Crea una plantilla que incluya los campos: `from_name`, `from_email`, `message`, `recipe_title` y `comment_content`.
+4. Copia las credenciales en tu archivo `.env`.
 
 ## 📖 Instalación
 

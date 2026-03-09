@@ -7,6 +7,7 @@ import {
   deleteComment,
   createNotification,
 } from "../services/supabaseClient";
+import { sendAdminAlert } from "../services/emailService";
 import { useRecipes } from "../context/RecipeContext";
 import {
   Form,
@@ -77,6 +78,16 @@ const RecipeComments = ({ recipeId }) => {
           fromUserName: user.fullName || user.username,
         });
       }
+
+      // Alerta de email para el administrador (Ezequiel)
+      await sendAdminAlert("comment", {
+        recipe_title: recipe?.title || "Receta desconocida",
+        comment_content: newComment,
+        from_name: user.fullName || user.username,
+        from_email: user.primaryEmailAddress?.emailAddress,
+      });
+
+      setNewComment("");
     } catch (err) {
       console.error("Error al añadir comentario:", err);
       setError(

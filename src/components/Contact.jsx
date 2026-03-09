@@ -1,5 +1,5 @@
 import { useState } from "react";
-import emailjs from "@emailjs/browser";
+import { sendEmail } from "../services/emailService";
 import { FaPaperPlane, FaEnvelope, FaUser, FaCommentAlt } from "react-icons/fa";
 import {
   Container,
@@ -103,26 +103,15 @@ const Contact = () => {
     setIsLoading(true);
 
     try {
-      // Envío real con EmailJS (cliente)
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
+      // Envío real con nuestro servicio centralizado
       const templateParams = {
-        name: formData.name,
-        email: formData.email,
+        from_name: formData.name,
+        from_email: formData.email,
         message: formData.message,
+        reply_to: formData.email,
       };
 
-      if (serviceId && templateId && publicKey) {
-        await emailjs.send(serviceId, templateId, templateParams, publicKey);
-      } else {
-        // Si no está configurado EmailJS, guardar localmente para no perder el mensaje
-        console.warn(
-          "EmailJS no está configurado. Guardando mensaje en localStorage.",
-        );
-      }
-
+      await sendEmail(templateParams);
       saveMessageToLocalStorage();
 
       // Mostrar éxito
@@ -135,6 +124,8 @@ const Contact = () => {
       }, 5000);
     } catch (error) {
       console.error("Error al enviar:", error);
+      // Si falla el servicio, al menos guardamos en local para no perder el dato
+      saveMessageToLocalStorage();
       setSubmitStatus("error");
     } finally {
       setIsLoading(false);

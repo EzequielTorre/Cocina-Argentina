@@ -1,8 +1,10 @@
-import { FaHeart, FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
+import { FaHeart, FaInstagram, FaFacebook, FaTwitter, FaEnvelope } from 'react-icons/fa';
 import { Container, Row, Col } from 'react-bootstrap';
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const adminEmail = "ezequiel.torres0682@gmail.com";
+
   return (
     <footer className="bg-dark text-white py-5 mt-auto">
       <Container>
@@ -12,6 +14,14 @@ const Footer = () => {
             <p className="text-white-50">
               Celebrando los sabores y tradiciones de nuestra tierra. Recetas auténticas para compartir en familia.
             </p>
+            <div className="mt-3">
+              <a 
+                href={`mailto:${adminEmail}`} 
+                className="text-info text-decoration-none d-flex align-items-center justify-content-center justify-content-md-start gap-2"
+              >
+                <FaEnvelope /> {adminEmail}
+              </a>
+            </div>
           </Col>
           <Col md={4} className="mb-4 mb-md-0">
             <h4 className="fw-bold mb-3 text-warning">Enlaces Rápidos</h4>

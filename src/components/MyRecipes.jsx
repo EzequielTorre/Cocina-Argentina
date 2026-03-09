@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { createRecipe, uploadImage } from "../services/supabaseClient";
+import { sendAdminAlert } from "../services/emailService";
 import {
   Container,
   Form,
@@ -105,6 +106,13 @@ export default function MyRecipes() {
       };
 
       const newRecipe = await createRecipe(recipeData, { userId: user.id });
+
+      // Alerta de email para el administrador (Ezequiel)
+      await sendAdminAlert("new_recipe", {
+        recipe_title: recipeData.title,
+        from_name: recipeData.author_name,
+        from_email: user.primaryEmailAddress?.emailAddress,
+      });
 
       setSuccess(true);
       setTimeout(() => {
