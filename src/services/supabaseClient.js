@@ -412,3 +412,34 @@ export const upsertUserProfile = async (profileData) => {
   }
   return data;
 };
+
+// --- STORAGE (IMÁGENES) ---
+
+/**
+ * Sube una imagen al bucket especificado y devuelve la URL pública
+ * @param {File} file - El archivo de imagen
+ * @param {string} bucket - Nombre del bucket ('recipe-images' o 'avatars')
+ * @returns {Promise<string>} URL pública de la imagen
+ */
+export const uploadImage = async (file, bucket = "recipe-images") => {
+  try {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Subir el archivo
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    // Obtener la URL pública
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (err) {
+    console.error("Error al subir imagen:", err);
+    throw err;
+  }
+};

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col, Spinner } from "react-bootstrap";
-import { upsertUserProfile } from "../services/supabaseClient";
+import { upsertUserProfile, uploadImage } from "../services/supabaseClient";
 
 const EditProfileModal = ({ show, onHide, user, currentProfile, onUpdate }) => {
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     name: currentProfile?.name || user?.fullName || user?.username || "",
     avatar_url: currentProfile?.avatar_url || user?.imageUrl || "",
@@ -23,13 +25,34 @@ const EditProfileModal = ({ show, onHide, user, currentProfile, onUpdate }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setFormData((prev) => ({ ...prev, avatar_url: "" }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      let finalAvatarUrl = formData.avatar_url;
+
+      if (imageFile) {
+        try {
+          finalAvatarUrl = await uploadImage(imageFile, "avatars");
+        } catch (uploadErr) {
+          console.error("Error subiendo avatar:", uploadErr);
+          alert("No se pudo subir la foto de perfil. Intenta con una URL.");
+        }
+      }
+
       const updatedProfile = await upsertUserProfile({
         user_id: user.id,
         ...formData,
+        avatar_url: finalAvatarUrl || formData.avatar_url,
       });
       onUpdate(updatedProfile);
       onHide();
@@ -66,15 +89,44 @@ const EditProfileModal = ({ show, onHide, user, currentProfile, onUpdate }) => {
             </Col>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label className="fw-bold">
-                  URL de Avatar (Imagen)
-                </Form.Label>
+                <Form.Label className="fw-bold">Foto de Perfil</Form.Label>
+
+                {/* Vista previa */}
+                {(imagePreview || formData.avatar_url) && (
+                  <div className="mb-2 text-center">
+                    <img
+                      src={imagePreview || formData.avatar_url}
+                      alt="Vista previa"
+                      className="rounded-circle border shadow-sm"
+                      style={{
+                        width: "80px",
+                        height: "80px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </div>
+                )}
+
+                <Form.Control
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="mb-2 form-control-sm"
+                />
+
+                <div className="text-center text-muted small mb-1">O URL:</div>
+
                 <Form.Control
                   type="url"
                   name="avatar_url"
                   value={formData.avatar_url}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
                   placeholder="https://ejemplo.com/mi-foto.jpg"
+                  className="form-control-sm"
                 />
               </Form.Group>
             </Col>

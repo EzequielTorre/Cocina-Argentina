@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { createRecipe } from "../services/supabaseClient";
+import { createRecipe, uploadImage } from "../services/supabaseClient";
 import {
   Container,
   Form,
@@ -25,7 +25,9 @@ export default function MyRecipes() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = false;
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -47,6 +49,16 @@ export default function MyRecipes() {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      // Limpiar URL si se sube archivo
+      setFormData((prev) => ({ ...prev, image: "" }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -58,6 +70,22 @@ export default function MyRecipes() {
     setError(null);
 
     try {
+      let finalImageUrl = formData.image;
+
+      // Si hay un archivo seleccionado, subirlo primero
+      if (imageFile) {
+        try {
+          finalImageUrl = await uploadImage(imageFile, "recipe-images");
+        } catch (uploadErr) {
+          console.error("Error subiendo imagen:", uploadErr);
+          setError(
+            "No se pudo subir la imagen. Intenta con una URL o con otro archivo.",
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
       // Preparar los datos para Supabase
       const recipeData = {
         title: formData.title,
@@ -66,12 +94,13 @@ export default function MyRecipes() {
         time: parseInt(formData.time) || null,
         difficulty: formData.difficulty,
         image:
-          formData.image ||
+          finalImageUrl ||
           "https://images.unsplash.com/photo-1495195129352-aec3297705a5?q=80&w=2070&auto=format&fit=crop", // Imagen por defecto si no hay una
         ingredients: formData.ingredients, // El servicio se encarga de normalizarlo
         instructions: formData.instructions, // El servicio se encarga de normalizarlo
         servings: parseInt(formData.servings) || null,
-        author_name: user.fullName || user.username || "Usuario de Cocina Argentina",
+        author_name:
+          user.fullName || user.username || "Usuario de Cocina Argentina",
         author_image: user.imageUrl,
       };
 
@@ -141,14 +170,47 @@ export default function MyRecipes() {
               <Col md={4}>
                 <Form.Group className="mb-4">
                   <Form.Label className="fw-bold d-flex align-items-center gap-2">
-                    <FaImage className="text-primary" /> URL de la Imagen
+                    <FaImage className="text-primary" /> Imagen de la Receta
                   </Form.Label>
+
+                  {/* Vista previa si hay imagen */}
+                  {(imagePreview || formData.image) && (
+                    <div
+                      className="mb-3 rounded overflow-hidden shadow-sm border"
+                      style={{ height: "150px" }}
+                    >
+                      <img
+                        src={imagePreview || formData.image}
+                        alt="Vista previa"
+                        className="w-100 h-100 object-fit-cover"
+                      />
+                    </div>
+                  )}
+
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="mb-2"
+                  />
+                  <Form.Text className="text-muted d-block mb-3">
+                    Sube una foto desde tu dispositivo.
+                  </Form.Text>
+
+                  <div className="text-center text-muted small mb-2">
+                    — O TAMBIÉN —
+                  </div>
+
                   <Form.Control
                     type="url"
                     name="image"
                     placeholder="https://ejemplo.com/foto.jpg"
                     value={formData.image}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      handleChange(e);
+                      setImageFile(null);
+                      setImagePreview(null);
+                    }}
                   />
                   <Form.Text className="text-muted">
                     Pega el enlace de una imagen de internet.
