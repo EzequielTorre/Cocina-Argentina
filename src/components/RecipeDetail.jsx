@@ -17,6 +17,7 @@ import LoadingSpinner from "./ui/LoadingSpinner";
 import ErrorAlert from "./ui/ErrorAlert";
 import RecipeComments from "./RecipeComments";
 import RecipeCard from "./RecipeCard";
+import SEO from "./SEO";
 import {
   Container,
   Row,
@@ -154,6 +155,12 @@ const RecipeDetail = () => {
 
   return (
     <Container className="pb-5">
+      <SEO
+        title={recipe.title}
+        description={recipe.description || recipe.descriptions}
+        image={recipe.image}
+        type="article"
+      />
       {/* Breadcrumb / Back */}
       <div className="mb-4 pt-4">
         <Link

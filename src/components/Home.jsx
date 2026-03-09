@@ -5,6 +5,7 @@ import { useRecipes } from "../context/RecipeContext";
 import RecipeCard from "./RecipeCard";
 import RecipeCardSkeleton from "./ui/RecipeCardSkeleton";
 import ErrorAlert from "./ui/ErrorAlert";
+import SEO from "./SEO";
 import { useEffect, useState, useMemo } from "react";
 import {
   FaUtensils,
@@ -39,6 +40,10 @@ const Home = () => {
 
   return (
     <div className="pb-5 bg-light">
+      <SEO
+        title="Inicio"
+        description="Bienvenidos a Cocina Argentina. Explora recetas tradicionales, asados, postres y mucho más."
+      />
       {/* Hero Section - Rediseñada */}
       <section
         className="position-relative overflow-hidden py-5 mb-5"

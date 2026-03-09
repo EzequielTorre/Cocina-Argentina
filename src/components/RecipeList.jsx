@@ -7,6 +7,7 @@ import { FaSearch, FaFilter, FaTimes } from "react-icons/fa";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import ErrorAlert from "./ui/ErrorAlert";
 import EmptyState from "./ui/EmptyState";
+import SEO from "./SEO";
 
 const RecipeList = () => {
   const { recipes, loading, error, searchRecipes, getCategories } =
@@ -35,6 +36,10 @@ const RecipeList = () => {
 
   return (
     <Container className="py-5">
+      <SEO
+        title="Recetario"
+        description="Explora nuestra colección completa de recetas argentinas: empanadas, asados, dulces y más."
+      />
       <div className="text-center mb-5">
         <h2 className="display-4 fw-bold mb-3">Nuestras Recetas</h2>
         <p

@@ -7,6 +7,7 @@ import { RecipeProvider } from "./context/RecipeContext.jsx";
 import { FavoritesProvider } from "./context/FavoritesContext.jsx";
 import { RatingsProvider } from "./context/RatingsContext.jsx";
 import { NotificationProvider } from "./context/NotificationContext.jsx";
+import { HelmetProvider } from "react-helmet-async";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -16,21 +17,23 @@ if (!PUBLISHABLE_KEY) {
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      fallbackRedirectUrl="/"
-      signUpFallbackRedirectUrl="/"
-    >
-      {/* Providers envuelven a App */}
-      <RecipeProvider>
-        <NotificationProvider>
-          <FavoritesProvider>
-            <RatingsProvider>
-              <App />
-            </RatingsProvider>
-          </FavoritesProvider>
-        </NotificationProvider>
-      </RecipeProvider>
-    </ClerkProvider>
+    <HelmetProvider>
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        fallbackRedirectUrl="/"
+        signUpFallbackRedirectUrl="/"
+      >
+        {/* Providers envuelven a App */}
+        <RecipeProvider>
+          <NotificationProvider>
+            <FavoritesProvider>
+              <RatingsProvider>
+                <App />
+              </RatingsProvider>
+            </FavoritesProvider>
+          </NotificationProvider>
+        </RecipeProvider>
+      </ClerkProvider>
+    </HelmetProvider>
   </StrictMode>,
 );
