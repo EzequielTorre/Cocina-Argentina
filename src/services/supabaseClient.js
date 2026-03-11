@@ -513,3 +513,56 @@ export const subscribeToNotifications = (userId, onNewNotification) => {
     )
     .subscribe();
 };
+
+// --- ADMINISTRACIÓN ---
+
+/**
+ * Obtiene todos los comentarios de todas las recetas (para moderación)
+ */
+export const getAllComments = async () => {
+  const { data, error } = await supabase
+    .from("comments")
+    .select("*, recipes(title)")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("getAllComments error:", error);
+    return [];
+  }
+  return data || [];
+};
+
+/**
+ * Elimina cualquier comentario (acción de administrador)
+ */
+export const adminDeleteComment = async (commentId) => {
+  if (!commentId) throw new Error("commentId required");
+  const { error } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId);
+  if (error) {
+    console.error("adminDeleteComment error:", error);
+    throw error;
+  }
+  return true;
+};
+
+/**
+ * Marca una receta como destacada o no
+ */
+export const toggleFeaturedRecipe = async (recipeId, isFeatured) => {
+  if (!recipeId) throw new Error("recipeId required");
+  const { data, error } = await supabase
+    .from("recipes")
+    .update({ is_featured: isFeatured })
+    .eq("id", recipeId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("toggleFeaturedRecipe error:", error);
+    throw error;
+  }
+  return data;
+};

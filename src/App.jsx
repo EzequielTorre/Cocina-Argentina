@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import UserProfile from "./components/UserProfile";
+import AdminDashboard from "./components/AdminDashboard";
 import "./App.css";
 
 function App() {
@@ -84,6 +85,19 @@ function App() {
                 <>
                   <SignedIn>
                     <UserProfile />
+                  </SignedIn>
+                  <SignedOut>
+                    <RedirectToSignIn />
+                  </SignedOut>
+                </>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <>
+                  <SignedIn>
+                    <AdminDashboard />
                   </SignedIn>
                   <SignedOut>
                     <RedirectToSignIn />

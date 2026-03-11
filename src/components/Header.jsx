@@ -1,6 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
-import { FaFire, FaSun, FaMoon, FaHeart, FaPlus, FaUser } from "react-icons/fa";
+import {
+  FaFire,
+  FaSun,
+  FaMoon,
+  FaHeart,
+  FaPlus,
+  FaUser,
+  FaShieldAlt,
+} from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/clerk-react";
 import NotificationBell from "./NotificationBell";
@@ -8,6 +16,9 @@ import NotificationBell from "./NotificationBell";
 const Header = () => {
   const { user } = useUser();
   const location = useLocation();
+  const ADMIN_EMAIL = "ezequiel.torres0682@gmail.com";
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === ADMIN_EMAIL;
+
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved;
@@ -104,6 +115,16 @@ const Header = () => {
                   className="d-flex align-items-center gap-1"
                 >
                   <FaUser /> Mi Perfil
+                </Nav.Link>
+              )}
+              {isAdmin && (
+                <Nav.Link
+                  as={Link}
+                  to="/admin"
+                  active={location.pathname === "/admin"}
+                  className="d-flex align-items-center gap-1 text-primary fw-bold"
+                >
+                  <FaShieldAlt /> Panel Admin
                 </Nav.Link>
               )}
             </SignedIn>
