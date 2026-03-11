@@ -133,16 +133,16 @@ const Footer = () => {
             <ul className="list-unstyled d-flex flex-column gap-3 text-white-50">
               <li className="d-flex align-items-start gap-3">
                 <FaMapMarkerAlt className="text-info mt-1" />
-                <span>Buenos Aires, Argentina</span>
+                <span>Pico Truncado, Santa Cruz, Argentina</span>
               </li>
               <li className="d-flex align-items-start gap-3">
                 <FaEnvelope className="text-info mt-1" />
-                <a
-                  href={`mailto:${adminEmail}`}
+                <Link
+                  to="/contacto"
                   className="text-white-50 text-decoration-none hover-info"
                 >
                   {adminEmail}
-                </a>
+                </Link>
               </li>
               <li className="d-flex align-items-start gap-3">
                 <FaPhoneAlt className="text-info mt-1" />
