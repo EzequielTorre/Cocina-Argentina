@@ -44,9 +44,28 @@ export const sendAdminAlert = async (type, data) => {
   const templateParams = {
     to_email: adminEmail,
     subject: `Nueva alerta en Cocina Argentina: ${type}`,
-    message: JSON.stringify(data, null, 2),
+    message: typeof data === "object" ? JSON.stringify(data, null, 2) : data,
     from_name: data.from_name || "Sistema de Notificaciones",
     ...data,
+  };
+
+  return sendEmail(templateParams);
+};
+
+/**
+ * Envía un correo desde el formulario de contacto al administrador
+ * @param {Object} contactData - Datos del formulario {name, email, message}
+ */
+export const sendContactEmail = async (contactData) => {
+  const adminEmail = "ezequiel.torres0682@gmail.com";
+
+  const templateParams = {
+    to_email: adminEmail,
+    from_name: contactData.name,
+    from_email: contactData.email,
+    message: contactData.message,
+    subject: `Nuevo mensaje de contacto de ${contactData.name}`,
+    reply_to: contactData.email,
   };
 
   return sendEmail(templateParams);

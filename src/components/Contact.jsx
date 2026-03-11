@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { sendEmail } from "../services/emailService";
+import { sendContactEmail } from "../services/emailService";
 import { FaPaperPlane, FaEnvelope, FaUser, FaCommentAlt } from "react-icons/fa";
 import {
   Container,
@@ -103,15 +103,13 @@ const Contact = () => {
     setIsLoading(true);
 
     try {
-      // Envío real con nuestro servicio centralizado
-      const templateParams = {
-        from_name: formData.name,
-        from_email: formData.email,
+      // Envío real con nuestro servicio centralizado mejorado
+      await sendContactEmail({
+        name: formData.name,
+        email: formData.email,
         message: formData.message,
-        reply_to: formData.email,
-      };
+      });
 
-      await sendEmail(templateParams);
       saveMessageToLocalStorage();
 
       // Mostrar éxito

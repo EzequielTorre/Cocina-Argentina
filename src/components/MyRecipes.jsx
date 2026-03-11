@@ -107,12 +107,17 @@ export default function MyRecipes() {
 
       const newRecipe = await createRecipe(recipeData, { userId: user.id });
 
-      // Alerta de email para el administrador (Ezequiel)
-      await sendAdminAlert("new_recipe", {
-        recipe_title: recipeData.title,
-        from_name: recipeData.author_name,
-        from_email: user.primaryEmailAddress?.emailAddress,
-      });
+      // Alerta de email para el administrador (Ezequiel) - No bloqueante
+      try {
+        await sendAdminAlert("new_recipe", {
+          recipe_title: recipeData.title,
+          from_name: recipeData.author_name,
+          from_email: user.primaryEmailAddress?.emailAddress,
+        });
+      } catch (emailErr) {
+        console.warn("Error al enviar alerta de email:", emailErr);
+        // No bloqueamos la creación de la receta si falla el email
+      }
 
       setSuccess(true);
       setTimeout(() => {
