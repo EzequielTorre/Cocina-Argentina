@@ -5,7 +5,7 @@ import { useUser } from "@clerk/clerk-react";
 import RecipeCard from "./RecipeCard";
 import RecipeCardSkeleton from "./ui/RecipeCardSkeleton";
 import EditProfileModal from "./EditProfileModal";
-import { getUserProfile } from "../services/supabaseClient";
+import { getUserProfile, upsertUserProfile } from "../services/supabaseClient";
 import {
   Container,
   Row,
@@ -45,7 +45,24 @@ const UserProfile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const data = await getUserProfile(userId);
+      let data = await getUserProfile(userId);
+
+      // Si no hay perfil en Supabase y es el dueño de la cuenta, lo creamos automáticamente
+      if (!data && isOwner && currentUser) {
+        const initialProfile = {
+          user_id: currentUser.id,
+          name:
+            currentUser.fullName ||
+            currentUser.username ||
+            "Cocinero Argentino",
+          avatar_url: currentUser.imageUrl,
+          contact_email: currentUser.primaryEmailAddress?.emailAddress || "",
+          occupation: "Cocinero Apasionado",
+          bio: "¡Hola! Soy nuevo en Cocina Argentina.",
+        };
+        data = await upsertUserProfile(initialProfile);
+      }
+
       setProfile(data);
     } catch (err) {
       console.error("Error al cargar perfil:", err);
@@ -75,11 +92,18 @@ const UserProfile = () => {
     );
   }
 
-  // Datos combinados: Prioridad al perfil de Supabase, luego a la info de la primera receta
+  // Datos combinados: Prioridad al perfil de Supabase, luego a la info de Clerk (si es el dueño), luego a la primera receta
   const displayName =
-    profile?.name || userRecipes[0]?.author_name || "Cocinero Argentino";
+    profile?.name ||
+    (isOwner ? currentUser?.fullName || currentUser?.username : null) ||
+    userRecipes[0]?.author_name ||
+    "Cocinero Argentino";
+
   const displayAvatar =
-    profile?.avatar_url || userRecipes[0]?.author_image || "";
+    profile?.avatar_url ||
+    (isOwner ? currentUser?.imageUrl : null) ||
+    userRecipes[0]?.author_image ||
+    "";
 
   return (
     <div className="bg-light min-vh-100">
