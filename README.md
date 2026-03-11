@@ -1,85 +1,77 @@
-# 🍲 Cocina Argentina - Plataforma de Comunidad Gastronómica Premium
+# 🍲 Cocina Argentina - Plataforma de Comunidad Gastronómica Fullstack
 
-> Una experiencia web social y profesional diseñada para explorar, crear y compartir el legado culinario argentino. Desarrollada con un stack de última generación enfocado en la interacción en tiempo real y la gestión avanzada de medios.
+> Una solución robusta y escalable diseñada para transformar la experiencia culinaria en una red social interactiva. Este proyecto representa la evolución de un recetario estático hacia una plataforma profesional con persistencia de datos, gestión de medios en la nube y administración de contenidos en tiempo real.
 
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Storage-3ECF8E?logo=supabase)](https://supabase.com)
 [![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?logo=clerk)](https://clerk.com)
-[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)](https://vitejs.dev)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite)](https://vitejs.dev)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap)](https://getbootstrap.com)
 
-## 🚀 Características Principales
+## �️ Arquitectura y Stack Técnico
 
-### ��🇷 Comunidad y Red Social
+Como desarrollador, he priorizado una arquitectura desacoplada y moderna utilizando **BaaS (Backend as a Service)** para garantizar velocidad de respuesta y seguridad:
 
-- **Perfiles Premium**: Páginas de perfil rediseñadas con banner hero, biografía, ocupación, medallas de logros y enlaces a redes sociales (Instagram, X, Facebook).
-- **Interacción en Tiempo Real**: Sistema de notificaciones mediante WebSockets que alerta instantáneamente sobre nuevos comentarios y calificaciones.
-- **Comunidad Gastronómica**: Sistema de comentarios dinámico con atribución de autor y enlaces directos entre perfiles.
-- **Atribución Dinámica**: Cada receta está vinculada a su creador, fomentando el reconocimiento entre cocineros.
+- **Frontend React 19**: Implementación de Hooks avanzados y `Context API` para la gestión de estados globales (Notificaciones, Recetas, Autenticación).
+- **Persistencia con PostgreSQL (Supabase)**: Modelado de datos relacional para usuarios, recetas, comentarios, favoritos y ratings.
+- **Gestión de Medios (Cloud Storage)**: Integración nativa con Supabase Buckets para la carga, procesamiento y entrega de imágenes de recetas y avatares de usuario.
+- **Autenticación Middleware (Clerk)**: Control de sesiones seguro con soporte para perfiles sociales y protección de rutas privadas.
+- **Real-time WebSockets**: Implementación de `Postgres Changes` para notificaciones instantáneas sin necesidad de recargar la página.
 
-### 🛠️ Herramientas Avanzadas
+## 🚀 Implementaciones de Ingeniería
 
-- **Supabase Storage**: Gestión real de archivos multimedia. Los usuarios pueden subir sus propias fotos de recetas y avatares directamente a la nube.
-- **Modo Cocina Pro**: Interfaz optimizada con prevención de bloqueo de pantalla (Wake Lock API) para seguir instrucciones sin interrupciones.
-- **Buscador Inteligente**: Filtros avanzados por ingredientes, categorías y niveles de dificultad con contador dinámico de resultados.
-- **Home Dinámica**: Secciones inteligentes de "Receta del Día", "Mejores Postres" y "Últimas Incorporaciones".
+### 🛡️ Panel de Administración y Moderación
 
-### 💾 Ingeniería y Persistencia
+He desarrollado un **Admin Dashboard** protegido que permite una gestión integral del ecosistema:
 
-- **Sincronización Cloud**: Persistencia total de favoritos, calificaciones y comentarios mediante Supabase.
-- **Arquitectura de Estado**: Uso intensivo de React Context API para una gestión fluida de notificaciones, recetas y autenticación.
-- **Seguridad RLS**: Políticas de Row Level Security configuradas para proteger los datos y archivos de cada usuario.
+- **Moderación Global**: Capacidad de auditar y eliminar comentarios en toda la plataforma.
+- **Curaduría de Contenido**: Herramienta para destacar recetas ("Featured") que impactan dinámicamente en la landing page.
+- **Control de Inventario**: Gestión completa del CRUD de recetas desde una interfaz centralizada.
 
-## 🛠️ Stack Tecnológico
+### � SEO y Optimización
 
-- **Frontend**: React 19, Vite, React Router v6, Bootstrap 5 (Custom CSS), React Icons.
-- **BaaS (Backend as a Service)**:
-  - **Supabase**: Base de datos PostgreSQL, Realtime (WebSockets) y Storage (Buckets).
-- **Autenticación**: Clerk (Gestión de usuarios y sesiones).
-- **APIs Modernas**: Web Wake Lock API, Fetch API, URL Object API.
+- **Dynamic Meta Tags**: Uso de `react-helmet-async` para generar Open Graph y Twitter Cards dinámicos, permitiendo que cada receta se comparta de forma profesional en redes sociales.
+- **Code Splitting**: Optimización de chunks para mejorar el tiempo de carga inicial (LCP).
+- **Responsive Premium**: Diseño adaptativo con Bootstrap 5 y CSS Custom Properties para una experiencia consistente en dispositivos móviles y escritorio.
 
-## 📂 Estructura del Proyecto
+### � Seguridad y RLS
+
+- **Row Level Security (RLS)**: Implementación de políticas SQL a nivel de base de datos para asegurar que cada usuario solo pueda modificar sus propios datos y archivos en el Storage.
+- **Environment Security**: Gestión estricta de variables de entorno para proteger credenciales sensibles de servicios externos.
+
+## 📂 Estructura del Ecosistema
 
 ```text
 src/
-├── components/          # Interfaz de usuario (Home, Perfiles, Notificaciones)
-│   ├── ui/              # Componentes atómicos (Skeletons, Spinners, Alerts)
-│   └── data/            # Fallback de datos locales
-├── context/             # Lógica global (Notifications, Recipes, Favorites, Ratings)
-├── services/            # Cliente Supabase y lógica de subida de medios
-├── App.jsx              # Enrutamiento y layouts
-└── main.jsx             # Inyección de Providers globales
+├── components/          # Componentes de interfaz (Dashboard, Perfiles, SEO, Notificaciones)
+├── context/             # Capas de estado global (NotificationContext, RecipeContext)
+├── services/            # Clientes de API y lógica de persistencia (Supabase, Email Service)
+├── utils/               # Validadores de esquemas y formateadores de datos
+├── App.jsx              # Orquestador de rutas y protección de vistas
+└── main.jsx             # Punto de entrada con inyección de Providers
 ```
 
-## ⚙️ Configuración del Entorno
+## ⚙️ Requisitos del Entorno
 
-Requiere un archivo `.env` con las siguientes claves:
+Para replicar el entorno de desarrollo, se requiere configurar las siguientes variables en un archivo `.env`:
 
 ```env
-VITE_CLERK_PUBLISHABLE_KEY=tu_key_de_clerk
-VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_ANON_KEY=tu_key_anonima_de_supabase
-VITE_EMAILJS_SERVICE_ID=tu_service_id_de_emailjs
-VITE_EMAILJS_TEMPLATE_ID=tu_template_id_de_emailjs
-VITE_EMAILJS_PUBLIC_KEY=tu_public_key_de_emailjs
+VITE_CLERK_PUBLISHABLE_KEY=...
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+# Credenciales de servicio de correo (EmailJS)
+VITE_EMAILJS_SERVICE_ID=...
+VITE_EMAILJS_TEMPLATE_ID=...
+VITE_EMAILJS_PUBLIC_KEY=...
 ```
 
-## 📧 Configuración de EmailJS
-
-Para recibir los mensajes del formulario de contacto y las alertas de actividad en tu correo personal:
-
-1. Crea una cuenta en [EmailJS](https://www.emailjs.com/).
-2. Conecta tu servicio de Gmail.
-3. Crea una plantilla que incluya los campos: `from_name`, `from_email`, `message`, `recipe_title` y `comment_content`.
-4. Copia las credenciales en tu archivo `.env`.
-
-## 📖 Instalación
+## � Despliegue e Instalación
 
 1. Clona el repositorio: `git clone https://github.com/EzequielTorre/Cocina-Argentina.git`
 2. Instala las dependencias: `npm install`
-3. Inicia el modo desarrollo: `npm run dev`
+3. Ejecuta el servidor de desarrollo: `npm run dev`
+4. Build para producción: `npm run build`
 
 ---
 
-📩 **Contacto**: ezequiel.torres0682@gmail.com
-🎓 **Estudiante de programación de la academia Talento Tech**
+📩 **Contacto**: ezequiel.torres0682@gmail.com 🎓 **Estudiante de programación de la academia Talento Tech**
