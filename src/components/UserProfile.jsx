@@ -49,18 +49,32 @@ const UserProfile = () => {
 
       // Si no hay perfil en Supabase y es el dueño de la cuenta, lo creamos automáticamente
       if (!data && isOwner && currentUser) {
+        console.log("DEBUG - Creando perfil automático para:", currentUser.id);
         const initialProfile = {
           user_id: currentUser.id,
           name:
             currentUser.fullName ||
             currentUser.username ||
             "Cocinero Argentino",
-          avatar_url: currentUser.imageUrl,
+          avatar_url: currentUser.imageUrl, // URL de Clerk (Google/etc)
           contact_email: currentUser.primaryEmailAddress?.emailAddress || "",
           occupation: "Cocinero Apasionado",
           bio: "¡Hola! Soy nuevo en Cocina Argentina.",
         };
         data = await upsertUserProfile(initialProfile);
+      } else if (
+        data &&
+        isOwner &&
+        currentUser &&
+        !data.avatar_url &&
+        currentUser.imageUrl
+      ) {
+        // Si el perfil existe pero no tiene foto, y Clerk sí tiene, actualizamos Supabase
+        console.log("DEBUG - Actualizando foto de Clerk a Supabase");
+        data = await upsertUserProfile({
+          ...data,
+          avatar_url: currentUser.imageUrl,
+        });
       }
 
       setProfile(data);
@@ -92,7 +106,7 @@ const UserProfile = () => {
     );
   }
 
-  // Datos combinados: Prioridad al perfil de Supabase, luego a la info de Clerk (si es el dueño), luego a la primera receta
+  // Datos combinados con depuración
   const displayName =
     profile?.name ||
     (isOwner ? currentUser?.fullName || currentUser?.username : null) ||
@@ -103,7 +117,16 @@ const UserProfile = () => {
     profile?.avatar_url ||
     (isOwner ? currentUser?.imageUrl : null) ||
     userRecipes[0]?.author_image ||
-    "";
+    null; // Cambiado de "" a null para mejor manejo
+
+  // Efecto de depuración para ver qué está llegando
+  useEffect(() => {
+    if (isOwner && currentUser) {
+      console.log("DEBUG - Perfil Supabase:", profile);
+      console.log("DEBUG - Usuario Clerk:", currentUser.imageUrl);
+      console.log("DEBUG - Imagen Final:", displayAvatar);
+    }
+  }, [profile, currentUser, isOwner, displayAvatar]);
 
   return (
     <div className="bg-light min-vh-100">
