@@ -473,6 +473,24 @@ export const markNotificationAsRead = async (notificationId) => {
   }
 };
 
+/**
+ * Marca todas las notificaciones de un usuario como leídas
+ */
+export const markAllNotificationsAsRead = async (userId) => {
+  if (!userId) return;
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", userId)
+    .eq("is_read", false);
+
+  if (error) {
+    console.error("markAllNotificationsAsRead error:", error);
+    throw error;
+  }
+  return true;
+};
+
 export const createNotification = async ({
   userId,
   type,

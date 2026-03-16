@@ -9,6 +9,7 @@ import { useUser } from "@clerk/clerk-react";
 import {
   getNotifications,
   markNotificationAsRead,
+  markAllNotificationsAsRead,
   subscribeToNotifications,
 } from "../services/supabaseClient";
 
@@ -64,12 +65,14 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const markAllAsRead = async () => {
-    const unreadIds = notifications.filter((n) => !n.is_read).map((n) => n.id);
-    for (const id of unreadIds) {
-      await markNotificationAsRead(id);
+    if (!user) return;
+    try {
+      await markAllNotificationsAsRead(user.id);
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error("Error al marcar todas como leídas:", err);
     }
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    setUnreadCount(0);
   };
 
   return (

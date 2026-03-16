@@ -58,21 +58,21 @@ const NotificationBell = () => {
       align="end"
       show={show}
       onToggle={(isOpen) => setShow(isOpen)}
-      className="mx-2"
+      className="mx-2 notification-dropdown"
     >
-      <div style={{ width: "320px", maxHeight: "450px", overflowY: "auto" }}>
+      <div className="dropdown-menu-content">
         <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light sticky-top">
           <h6 className="mb-0 fw-bold">Notificaciones</h6>
-          {unreadCount > 0 && (
+          {notifications.length > 0 && (
             <Button
               variant="link"
-              className="p-0 text-decoration-none small"
+              className="p-0 text-decoration-none small text-primary"
               onClick={(e) => {
                 e.stopPropagation();
                 markAllAsRead();
               }}
             >
-              Marcar todo como leído
+              {unreadCount > 0 ? "Marcar todas como leídas" : "Vaciadas"}
             </Button>
           )}
         </div>
@@ -84,7 +84,9 @@ const NotificationBell = () => {
                 key={notif.id}
                 action
                 onClick={() => handleNotificationClick(notif)}
-                className={`d-flex align-items-start gap-3 border-bottom py-3 ${!notif.is_read ? "bg-light fw-bold" : ""}`}
+                className={`d-flex align-items-start gap-3 border-bottom py-3 ${
+                  !notif.is_read ? "bg-light fw-bold" : ""
+                }`}
               >
                 <div className="mt-1 fs-5">{getIcon(notif.type)}</div>
                 <div className="flex-grow-1 overflow-hidden">
@@ -98,18 +100,61 @@ const NotificationBell = () => {
                     )}
                   </div>
                   <span className="text-muted small d-block">
-                    {new Date(notif.created_at).toLocaleDateString()}
+                    {new Date(notif.created_at).toLocaleString()}
                   </span>
                 </div>
               </ListGroup.Item>
             ))
           ) : (
-            <div className="p-4 text-center text-muted">
-              <p className="mb-0 small">No tienes notificaciones todavía</p>
+            <div className="p-5 text-center text-muted">
+              <FaBell size={40} className="mb-3 opacity-25" />
+              <p className="small mb-0">No tienes notificaciones</p>
             </div>
           )}
         </ListGroup>
       </div>
+
+      <style>{`
+        .notification-dropdown .dropdown-menu {
+          padding: 0;
+          border: none;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        
+        .dropdown-menu-content {
+          width: 320px;
+          max-height: 450px;
+          overflow-y: auto;
+        }
+
+        /* Estilos para móviles y tablets */
+        @media (max-width: 768px) {
+          .notification-dropdown .dropdown-menu {
+            position: fixed !important;
+            top: 60px !important;
+            left: 10px !important;
+            right: 10px !important;
+            width: auto !important;
+            max-width: none !important;
+            transform: none !important;
+          }
+          
+          .dropdown-menu-content {
+            width: 100%;
+            max-height: 70vh;
+          }
+        }
+
+        .notification-dropdown .list-group-item {
+          transition: background-color 0.2s ease;
+        }
+        
+        .notification-dropdown .list-group-item:hover {
+          background-color: rgba(0,0,0,0.02);
+        }
+      `}</style>
     </NavDropdown>
   );
 };
