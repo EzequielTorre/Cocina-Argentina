@@ -6,6 +6,8 @@ import {
   addComment,
   deleteComment,
   createNotification,
+  reactToComment,
+  getCommentReactions,
 } from "../services/supabaseClient";
 import { sendAdminAlert } from "../services/emailService";
 import { useRecipes } from "../context/RecipeContext";
@@ -18,12 +20,19 @@ import {
   Alert,
   Spinner,
 } from "react-bootstrap";
-import { FaTrash, FaCommentAlt, FaPaperPlane } from "react-icons/fa";
+import {
+  FaTrash,
+  FaCommentAlt,
+  FaPaperPlane,
+  FaThumbsUp,
+  FaThumbsDown,
+} from "react-icons/fa";
 
 const RecipeComments = ({ recipeId }) => {
   const { user } = useUser();
   const { getRecipeById } = useRecipes();
   const [comments, setComments] = useState([]);
+  const [reactions, setReactions] = useState({}); // { commentId: { likes: 0, dislikes: 0, myReaction: null } }
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -34,6 +43,12 @@ const RecipeComments = ({ recipeId }) => {
       setLoading(true);
       const data = await getComments(recipeId);
       setComments(data);
+
+      if (data.length > 0) {
+        const commentIds = data.map((c) => c.id);
+        const reactionsData = await getCommentReactions(commentIds);
+        processReactions(reactionsData, commentIds);
+      }
     } catch (err) {
       console.error("Error al cargar comentarios:", err);
       setError("No se pudieron cargar los comentarios.");
@@ -42,11 +57,44 @@ const RecipeComments = ({ recipeId }) => {
     }
   };
 
+  const processReactions = (reactionsData, commentIds) => {
+    const newReactions = {};
+    commentIds.forEach((id) => {
+      const commentReactions = reactionsData.filter((r) => r.comment_id === id);
+      newReactions[id] = {
+        likes: commentReactions.filter((r) => r.reaction_type === "like")
+          .length,
+        dislikes: commentReactions.filter((r) => r.reaction_type === "dislike")
+          .length,
+        myReaction:
+          (user &&
+            commentReactions.find((r) => r.user_id === user.id)
+              ?.reaction_type) ||
+          null,
+      };
+    });
+    setReactions(newReactions);
+  };
+
   useEffect(() => {
     if (recipeId) {
       fetchComments();
     }
-  }, [recipeId]);
+  }, [recipeId, user?.id]);
+
+  const handleReaction = async (commentId, type) => {
+    if (!user) return;
+
+    try {
+      await reactToComment(commentId, user.id, type);
+      // Recargar solo las reacciones para este comentario (o todas por simplicidad)
+      const commentIds = comments.map((c) => c.id);
+      const reactionsData = await getCommentReactions(commentIds);
+      processReactions(reactionsData, commentIds);
+    } catch (err) {
+      console.error("Error al reaccionar:", err);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -214,15 +262,51 @@ const RecipeComments = ({ recipeId }) => {
                   </div>
                   <p className="mb-0 text-secondary">{comment.content}</p>
                 </div>
-                {user && user.id === comment.user_id && (
-                  <Button
-                    variant="link"
-                    className="text-danger p-0 mt-1 small text-decoration-none d-flex align-items-center gap-1"
-                    onClick={() => handleDelete(comment.id)}
-                  >
-                    <FaTrash size={12} /> Eliminar
-                  </Button>
-                )}
+                <div className="d-flex align-items-center gap-3 mt-1 ms-2">
+                  <div className="d-flex align-items-center gap-1">
+                    <Button
+                      variant="link"
+                      className={`p-0 text-decoration-none d-flex align-items-center gap-1 transition-all ${
+                        reactions[comment.id]?.myReaction === "like"
+                          ? "text-primary fw-bold"
+                          : "text-muted"
+                      }`}
+                      onClick={() => handleReaction(comment.id, "like")}
+                      disabled={!user}
+                    >
+                      <FaThumbsUp size={14} />
+                      <span className="small">
+                        {reactions[comment.id]?.likes || 0}
+                      </span>
+                    </Button>
+                  </div>
+                  <div className="d-flex align-items-center gap-1">
+                    <Button
+                      variant="link"
+                      className={`p-0 text-decoration-none d-flex align-items-center gap-1 transition-all ${
+                        reactions[comment.id]?.myReaction === "dislike"
+                          ? "text-danger fw-bold"
+                          : "text-muted"
+                      }`}
+                      onClick={() => handleReaction(comment.id, "dislike")}
+                      disabled={!user}
+                    >
+                      <FaThumbsDown size={14} />
+                      <span className="small">
+                        {reactions[comment.id]?.dislikes || 0}
+                      </span>
+                    </Button>
+                  </div>
+                  {user && user.id === comment.user_id && (
+                    <Button
+                      variant="link"
+                      className="text-danger p-0 small text-decoration-none d-flex align-items-center gap-1 ms-auto"
+                      onClick={() => handleDelete(comment.id)}
+                    >
+                      <FaTrash size={12} /> Eliminar
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -232,6 +316,17 @@ const RecipeComments = ({ recipeId }) => {
           <p className="mb-0">¡Sé el primero en comentar esta receta!</p>
         </div>
       )}
+      <style>{`
+        .hover-primary:hover {
+          color: var(--bs-primary) !important;
+        }
+        .transition-all {
+          transition: all 0.2s ease;
+        }
+        .transition-all:hover {
+          transform: scale(1.1);
+        }
+      `}</style>
     </div>
   );
 };

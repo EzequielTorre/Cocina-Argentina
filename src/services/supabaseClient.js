@@ -380,6 +380,76 @@ export const deleteComment = async (commentId, userId) => {
   return true;
 };
 
+/**
+ * Reacciona a un comentario (Like/Dislike)
+ */
+export const reactToComment = async (commentId, userId, type) => {
+  if (!commentId || !userId) return;
+
+  // 1. Verificar si ya existe una reacción del usuario para este comentario
+  const { data: existingReaction, error: fetchError } = await supabase
+    .from("comment_reactions")
+    .select("*")
+    .eq("comment_id", commentId)
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError && fetchError.code !== "PGRST116") {
+    console.error("Error al buscar reacción existente:", fetchError);
+    throw fetchError;
+  }
+
+  if (existingReaction) {
+    if (existingReaction.reaction_type === type) {
+      // Si hace click en el mismo tipo, eliminamos la reacción (undo)
+      const { error: deleteError } = await supabase
+        .from("comment_reactions")
+        .delete()
+        .eq("id", existingReaction.id);
+      if (deleteError) throw deleteError;
+      return { action: "deleted" };
+    } else {
+      // Si hace click en el otro tipo, actualizamos
+      const { data, error: updateError } = await supabase
+        .from("comment_reactions")
+        .update({ reaction_type: type })
+        .eq("id", existingReaction.id)
+        .select()
+        .single();
+      if (updateError) throw updateError;
+      return { action: "updated", data };
+    }
+  } else {
+    // Si no existe, creamos una nueva
+    const { data, error: insertError } = await supabase
+      .from("comment_reactions")
+      .insert([{ comment_id: commentId, user_id: userId, reaction_type: type }])
+      .select()
+      .single();
+    if (insertError) throw insertError;
+    return { action: "inserted", data };
+  }
+};
+
+/**
+ * Obtiene el conteo de reacciones para una lista de comentarios
+ */
+export const getCommentReactions = async (commentIds) => {
+  if (!commentIds || commentIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("comment_reactions")
+    .select("*")
+    .in("comment_id", commentIds);
+
+  if (error) {
+    console.error("Error al obtener reacciones:", error);
+    return [];
+  }
+
+  return data;
+};
+
 // --- PERFILES DE USUARIO ---
 
 export const getUserProfile = async (userId) => {
