@@ -96,16 +96,6 @@ const UserProfile = () => {
     }
   }, [recipes, userId]);
 
-  if (loading || recipesLoading) {
-    return (
-      <Container className="py-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando perfil...</span>
-        </div>
-      </Container>
-    );
-  }
-
   // Datos combinados con depuración
   const displayName =
     profile?.name ||
@@ -127,6 +117,16 @@ const UserProfile = () => {
       console.log("DEBUG - Imagen Final:", displayAvatar);
     }
   }, [profile, currentUser, isOwner, displayAvatar]);
+
+  if (loading || recipesLoading) {
+    return (
+      <Container className="py-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Cargando perfil...</span>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <div className="bg-light min-vh-100">
