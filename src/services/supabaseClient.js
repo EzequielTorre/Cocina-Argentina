@@ -602,6 +602,29 @@ export const subscribeToNotifications = (userId, onNewNotification) => {
     .subscribe();
 };
 
+/**
+ * Se suscribe a cambios en las reacciones de comentarios de una receta
+ */
+export const subscribeToReactions = (commentIds, onReactionChange) => {
+  if (!commentIds || commentIds.length === 0) return null;
+
+  return supabase
+    .channel("comment-reactions-channel")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "comment_reactions",
+      },
+      () => {
+        // Cuando hay cualquier cambio (INSERT, UPDATE, DELETE), avisamos para recargar
+        onReactionChange();
+      },
+    )
+    .subscribe();
+};
+
 // --- ADMINISTRACIÓN ---
 
 /**

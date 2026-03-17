@@ -8,6 +8,7 @@ import {
   createNotification,
   reactToComment,
   getCommentReactions,
+  subscribeToReactions,
 } from "../services/supabaseClient";
 import { sendAdminAlert } from "../services/emailService";
 import { useRecipes } from "../context/RecipeContext";
@@ -82,12 +83,44 @@ const RecipeComments = ({ recipeId }) => {
     }
   }, [recipeId, user?.id]);
 
+  // Suscripción en tiempo real a reacciones
+  useEffect(() => {
+    if (comments.length > 0) {
+      const commentIds = comments.map((c) => c.id);
+      const subscription = subscribeToReactions(commentIds, async () => {
+        const reactionsData = await getCommentReactions(commentIds);
+        processReactions(reactionsData, commentIds);
+      });
+
+      return () => {
+        if (subscription) subscription.unsubscribe();
+      };
+    }
+  }, [comments]);
+
   const handleReaction = async (commentId, type) => {
     if (!user) return;
 
     try {
-      await reactToComment(commentId, user.id, type);
-      // Recargar solo las reacciones para este comentario (o todas por simplicidad)
+      const result = await reactToComment(commentId, user.id, type);
+
+      // Si la reacción fue una inserción (no un undo o update), notificamos al autor
+      if (result?.action === "inserted" || result?.action === "updated") {
+        const targetComment = comments.find((c) => c.id === commentId);
+        const recipe = await getRecipeById(recipeId);
+
+        if (targetComment && targetComment.user_id !== user.id) {
+          await createNotification({
+            userId: targetComment.user_id,
+            type: "rating", // Reutilizamos el icono de estrella/rating o podemos crear uno nuevo
+            content: `${user.fullName || user.username} reaccionó a tu comentario: "${targetComment.content.substring(0, 30)}..."`,
+            recipeId: recipeId,
+            fromUserName: user.fullName || user.username,
+          });
+        }
+      }
+
+      // El estado se actualizará vía suscripción real-time, pero forzamos local para rapidez
       const commentIds = comments.map((c) => c.id);
       const reactionsData = await getCommentReactions(commentIds);
       processReactions(reactionsData, commentIds);
